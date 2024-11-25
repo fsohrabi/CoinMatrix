@@ -1,6 +1,8 @@
 from flask import Flask
+from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from passlib.context import CryptContext
 from .config import config  # Import the config dictionary
 import os
 from dotenv import load_dotenv
@@ -9,6 +11,8 @@ load_dotenv()
 
 db = SQLAlchemy()
 migrate = Migrate()
+pwd_context = CryptContext(schemes=['pbkdf2_sha256'], deprecated='auto')
+jwt = JWTManager()
 
 
 def create_app():
@@ -20,7 +24,13 @@ def create_app():
 
     db.init_app(app)
     migrate.init_app(app, db)
+    jwt.init_app(app)
+
+    # import models
+    from src.models.users import User
 
     # Register blueprints here
+    from src.routes.auth import auth_blueprint
+    app.register_blueprint(auth_blueprint)
 
     return app
