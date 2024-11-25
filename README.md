@@ -11,17 +11,17 @@ This repository contains the backend service for a Coin360-like application, bui
    cd <CoinMatrix>
    
 2. **Create and Activate a Virtual Environment:**
-   ```bash
+```bash
   python -m venv .venv
    source .venv/bin/activate  # On Linux/Mac
    .\.venv\Scripts\activate   # On Windows
+```
 
-
-3. **Install the required packages:**
+1. **Install the required packages:**
     ```bash
    pip install -r requirements.txt
 
-4. **Set up environment variables:** Create a file named .env in the root directory of the project with the following content:
+2. **Set up environment variables:** Create a file named .env in the root directory of the project with the following content:
    ```
    FLASK_ENV=
    DEV_DATABASE_URL=
