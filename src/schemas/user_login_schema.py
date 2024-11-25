@@ -4,9 +4,11 @@ from src import pwd_context
 
 
 class UserLoginSchema(Schema):
-    email = fields.String(
+    """
+    Schema for validating user login credentials.
+    """
+    email = fields.Email(
         required=True,
-        validate=[validate.Email()],
         error_messages={"required": "Email is required", "invalid": "Invalid email format"}
     )
     password = fields.String(
@@ -15,11 +17,14 @@ class UserLoginSchema(Schema):
     )
 
     def validate_credentials(self, data):
-        email = data.get("email")
-        password = data.get("password")
+        """
+        Validates email and password against stored user data.
 
-        user = User.query.filter_by(email=email).first()
-        if not user or not pwd_context.verify(password, user.password):
+        :param data: Dictionary containing login credentials
+        :return: The authenticated user instance
+        :raises ValidationError: If email or password is invalid
+        """
+        user = User.query.filter_by(email=data.get("email")).first()
+        if not user or not pwd_context.verify(data.get("password"), user.password):
             raise ValidationError("Invalid email or password.")
-
         return user

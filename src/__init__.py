@@ -7,28 +7,40 @@ from .config import config
 import os
 from dotenv import load_dotenv
 
+# Load environment variables from a .env file
 load_dotenv()
 
+# Initialize extensions
 db = SQLAlchemy()
 migrate = Migrate()
-pwd_context = CryptContext(schemes=['pbkdf2_sha256'], deprecated='auto')
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 jwt = JWTManager()
 
 
 def create_app():
+    """
+    Create and configure a Flask application.
+
+    :return: A configured Flask app instance
+    :raises ValueError: If FLASK_ENV environment variable is not valid
+    """
     app = Flask(__name__)
-    env = os.getenv('FLASK_ENV')
+
+    # Load environment-specific configuration
+    env = os.getenv("FLASK_ENV")
     if env not in config:
         raise ValueError(f"Invalid FLASK_ENV value: {env}")
-    app.config.from_object(config[env])  # Use the config dictionary
+    app.config.from_object(config[env])
 
+    # Initialize Flask extensions
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
 
+    # Import models to ensure they are registered with SQLAlchemy
     import src.models
 
-    # Register blueprints here
+    # Register blueprints
     from src.routes.auth import auth_blueprint
     app.register_blueprint(auth_blueprint)
 

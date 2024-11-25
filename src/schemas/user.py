@@ -3,34 +3,30 @@ from src.models.users import User
 
 
 class UserSchema(Schema):
+    """Base schema for user validation."""
     name = fields.String(
         required=True,
-        validate=[validate.Length(min=3)],
-        error_messages={
-            "required": "The name is required",
-            "invalid": "The name is invalid and needs to be a string",
-        },
+        validate=validate.Length(min=3),
+        error_messages={"required": "Name is required", "invalid": "Invalid name format"},
     )
-    email = fields.String(required=True, validate=[validate.Email()])
+    email = fields.Email(required=True, error_messages={"required": "Email is required"})
 
     @validates_schema
     def validate_email(self, data, **kwargs):
-        email = data.get("email")
-        if User.query.filter_by(email=email).count():
-            raise ValidationError(f"Email {email} already exists.")
+        """Ensure the email is unique."""
+        if User.query.filter_by(email=data.get("email")).count():
+            raise ValidationError(f"Email {data['email']} already exists.")
 
 
 class UserCreateSchema(UserSchema):
+    """Schema for creating a new user, including password validation."""
     password = fields.String(
         required=True,
-        validate=[
-            validate.Regexp(
-                r"^(?=.*[A-Z])(?=.*[!@#$&*])(?=.*[0-9])(?=.*[a-z]).{8,}$",
-                error=(
-                    "The password needs to be at least 8 characters long and "
-                    "have at least 1 of each of the following: lowercase letter, "
-                    "uppercase letter, special character, number."
-                ),
-            )
-        ],
+        validate=validate.Regexp(
+            r"^(?=.*[A-Z])(?=.*[!@#$&*])(?=.*[0-9])(?=.*[a-z]).{8,}$",
+            error=(
+                "Password must be at least 8 characters long, including 1 uppercase, "
+                "1 lowercase, 1 special character, and 1 number."
+            ),
+        ),
     )
