@@ -6,6 +6,7 @@ from passlib.context import CryptContext
 from .config import config
 import os
 from dotenv import load_dotenv
+from src.utils.user_role_utils import seed_admin_user, seed_roles
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -39,6 +40,10 @@ def create_app():
 
     # Import models to ensure they are registered with SQLAlchemy
     import src.models
+    with app.app_context():
+        # Seed roles and admin user
+        seed_roles()  # Ensure roles exist first
+        seed_admin_user()
 
     # Register blueprints
     from src.routes.auth import auth_blueprint

@@ -30,6 +30,7 @@ from flask_jwt_extended import (
 )
 from src import db, jwt
 from src.schemas.user_login_schema import UserLoginSchema
+from src.utils.user_role_utils import assign_role_to_user
 
 auth_blueprint = Blueprint("auth", __name__, url_prefix="/api/v1/auth")
 
@@ -58,6 +59,7 @@ def register():
         user = User(**user_data)
         db.session.add(user)
         db.session.commit()
+        assign_role_to_user(user, "user")
         return jsonify({"message": "User registered successfully"}), 201
     except ValidationError as err:
         return jsonify({"errors": err.messages}), 400
