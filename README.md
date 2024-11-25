@@ -43,7 +43,15 @@ If you clone this repository and do not have existing migrations, you can initia
 3. **apply the migrations to the database:**
    ```bash
    flask db upgrade
-   
+
+### Admin Setup
+An admin user is automatically created during the application startup if the required admin details are present in the .env file. Ensure the following environment variables are set in your .env file:
+
+```
+ADMIN_EMAIL=<admin_email@example.com>    # Email for the admin account
+ADMIN_NAME=<admin_name>                  # Name for the admin account
+ADMIN_PASSWORD=<admin_password>          # Strong password for the admin account
+```
 ### Usage
 To run the application, use:
    ```bash
