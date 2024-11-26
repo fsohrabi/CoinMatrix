@@ -12,6 +12,7 @@ class Config:
     JWT_IDENTITY_CLAIM = 'user_id'
     UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+    MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5 MB
 
 
 class DevelopmentConfig(Config):

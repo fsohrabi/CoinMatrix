@@ -23,6 +23,8 @@ def upload_image():
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
+    if request.content_length > current_app.config['MAX_CONTENT_LENGTH']:
+        return jsonify({'error': 'File size exceeds the maximum limit of 5 MB'}), 413
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
