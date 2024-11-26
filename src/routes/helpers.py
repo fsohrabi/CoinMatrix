@@ -9,11 +9,12 @@ Functions:
 """
 
 from datetime import datetime
+
+from flask import current_app
 from flask_jwt_extended import decode_token
 from sqlalchemy.orm.exc import NoResultFound
 
 from src import db
-from src.config import Config
 from src.models.auth import TokenBlocklist
 
 
@@ -33,7 +34,7 @@ def add_token_to_database(encoded_token):
     decoded_token = decode_token(encoded_token)
     jti = decoded_token["jti"]
     token_type = decoded_token["type"]
-    user_id = decoded_token[Config.JWT_IDENTITY_CLAIM]
+    user_id = decoded_token[current_app.config['JWT_IDENTITY_CLAIM']]
     expires = datetime.fromtimestamp(decoded_token["exp"])
 
     db_token = TokenBlocklist(

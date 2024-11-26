@@ -6,7 +6,6 @@ from passlib.context import CryptContext
 from .config import config
 import os
 from dotenv import load_dotenv
-from src.utils.user_role_utils import seed_admin_user, seed_roles
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -32,6 +31,8 @@ def create_app():
     if env not in config:
         raise ValueError(f"Invalid FLASK_ENV value: {env}")
     app.config.from_object(config[env])
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
 
     # Initialize Flask extensions
     db.init_app(app)
@@ -42,11 +43,14 @@ def create_app():
     import src.models
     with app.app_context():
         # Seed roles and admin user
-        seed_roles()  # Ensure roles exist first
+        from src.utils.user_role_utils import seed_admin_user, seed_roles
+        seed_roles()
         seed_admin_user()
 
     # Register blueprints
     from src.routes.auth import auth_blueprint
     app.register_blueprint(auth_blueprint)
+    from src.routes.admin import admin_blueprint
+    app.register_blueprint(admin_blueprint)
 
     return app

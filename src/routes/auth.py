@@ -14,10 +14,9 @@ Routes:
 - /revoke_refresh: Revoke a refresh token.
 """
 
-from flask import request, jsonify, Blueprint
+from flask import request, jsonify, Blueprint, current_app
 from marshmallow import ValidationError
 
-from src.config import Config
 from src.models.users import User
 from src.routes.helpers import add_token_to_database, revoke_token, is_token_revoked
 from src.schemas.user import UserCreateSchema
@@ -141,7 +140,7 @@ def revoke_refresh_token():
 
 
 @jwt.user_lookup_loader
-def user_loader_callback(jwt_payload):
+def user_loader_callback(jwt_header, jwt_payload):
     """
     Load a user instance based on the JWT identity claim.
 
@@ -151,12 +150,12 @@ def user_loader_callback(jwt_payload):
     Returns:
     - User: The user instance corresponding to the identity claim.
     """
-    identity = jwt_payload[Config.JWT_IDENTITY_CLAIM]
+    identity = jwt_payload[current_app.config['JWT_IDENTITY_CLAIM']]
     return User.query.get(identity)
 
 
 @jwt.token_in_blocklist_loader
-def check_if_token_revoked(jwt_payload):
+def check_if_token_revoked(jwt_header, jwt_payload):
     """
     Check if a token has been revoked.
 

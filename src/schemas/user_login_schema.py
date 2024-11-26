@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields, validate, ValidationError
+from marshmallow import Schema, fields, ValidationError
 from src.models.users import User
 from src import pwd_context
 

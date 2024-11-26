@@ -1,3 +1,6 @@
+from src.models import *
+from src import pwd_context
+from src import db
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -9,8 +12,6 @@ def assign_role_to_user(user, role_slug):
     :param user: User object
     :param role_slug: Role slug to assign
     """
-    from src.models.users import User, Role
-    from src import db
     role = Role.query.filter_by(slug=role_slug).first()
     if not role:
         raise ValueError(f"Role '{role_slug}' does not exist.")
@@ -20,8 +21,6 @@ def assign_role_to_user(user, role_slug):
 
 def seed_admin_user():
     """Seed an admin user using environment variables."""
-    from src.models.users import User
-    from src import db, pwd_context
     admin_email = os.getenv("ADMIN_EMAIL")
     admin_name = os.getenv("ADMIN_NAME")
     admin_password = os.getenv("ADMIN_PASSWORD")
@@ -39,7 +38,7 @@ def seed_admin_user():
     admin_user = User(
         name=admin_name,
         email=admin_email,
-        password=pwd_context.hash(admin_password)
+        password=admin_password
     )
     db.session.add(admin_user)
     db.session.commit()
