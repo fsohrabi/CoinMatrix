@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
 
@@ -14,6 +15,9 @@ class Config:
     UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static/uploads')
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5 MB
+    CACHE_TYPE = 'SimpleCache'
+    # Cache data for 5 minutes
+    CACHE_DEFAULT_TIMEOUT = 300
 
 
 class DevelopmentConfig(Config):

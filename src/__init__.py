@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_caching import Cache
 from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -15,6 +16,7 @@ db = SQLAlchemy()
 migrate = Migrate()
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 jwt = JWTManager()
+cache = Cache()
 
 
 def create_app():
@@ -38,6 +40,7 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
+    cache.init_app(app)
 
     # Import models to ensure they are registered with SQLAlchemy
     import src.models
@@ -52,5 +55,7 @@ def create_app():
     app.register_blueprint(auth_blueprint)
     from src.routes.admin import admin_blueprint
     app.register_blueprint(admin_blueprint)
+    from src.routes.main import main_blueprint
+    app.register_blueprint(main_blueprint)
 
     return app
