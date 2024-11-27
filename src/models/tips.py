@@ -14,4 +14,4 @@ class Tip(db.Model):
     is_active = db.Column(db.Boolean, default=True)
 
     def __repr__(self):
-        return f'<CryptoTip {self.title}>'
+        return f'<Tip {self.title}>'

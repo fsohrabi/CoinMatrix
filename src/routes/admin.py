@@ -1,5 +1,5 @@
 from flask import request, jsonify, current_app, Blueprint, url_for
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from marshmallow import ValidationError
 from werkzeug.utils import secure_filename
 from src import db
@@ -40,7 +40,16 @@ def upload_image():
 @jwt_required()
 @admin_required
 def create_tip():
+    try:
+        identity = get_jwt_identity()
+        print(f"Authenticated user: {identity}")
+    except Exception as e:
+        return jsonify({'error': 'Authentication failed', 'details': str(e)}), 422
+
+    # Parse request data
     data = request.get_json()
+    if not data:
+        return jsonify({'error': 'Invalid JSON or missing payload'}), 400
 
     # Validate input using Marshmallow
     schema = TipSchema()
@@ -50,14 +59,19 @@ def create_tip():
         return jsonify({'errors': err.messages}), 400
 
     # Create and save the Tip
-    tip = Tip(
-        title=validated_data['title'],
-        description=validated_data['description'],
-        category=validated_data['category'],
-        image=validated_data['image_url'],
-    )
-    db.session.add(tip)
-    db.session.commit()
+    try:
+        tip = Tip(
+            title=validated_data['title'],
+            description=validated_data['description'],
+            category=validated_data['category'],
+            image=validated_data['image_url'],
+            is_active=validated_data.get('is_active', True),
+        )
+        db.session.add(tip)
+        db.session.commit()
+    except Exception as db_err:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to save tip', 'details': str(db_err)}), 500
 
     return jsonify({'message': 'Crypto tip created successfully', 'tip': tip.id}), 201
 
