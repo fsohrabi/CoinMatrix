@@ -6,7 +6,7 @@ from src import db
 from src.models import Tip
 import os
 
-from src.routes.decorators import admin_required
+from src.utils.decorators import role_required
 from src.schemas.tip import TipSchema
 
 admin_blueprint = Blueprint("admin", __name__, url_prefix="/api/v1/admin")
@@ -18,7 +18,7 @@ def allowed_file(filename):
 
 @admin_blueprint.route('/upload_image', methods=['POST'])
 @jwt_required()
-@admin_required
+@role_required(["admin"], "Admin access required")
 def upload_image():
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
@@ -38,7 +38,7 @@ def upload_image():
 
 @admin_blueprint.route('/create_tip', methods=['POST'])
 @jwt_required()
-@admin_required
+@role_required(["admin"], "Admin access required")
 def create_tip():
     try:
         identity = get_jwt_identity()
@@ -56,7 +56,7 @@ def create_tip():
     try:
         validated_data = schema.load(data)
     except ValidationError as err:
-        return jsonify({'errors': err.messages}), 400
+        return jsonify({'errors.py': err.messages}), 400
 
     # Create and save the Tip
     try:
@@ -78,7 +78,7 @@ def create_tip():
 
 @admin_blueprint.route('/edit_tip/<int:tip_id>', methods=['PUT'])
 @jwt_required()
-@admin_required
+@role_required(["admin"], "Admin access required")
 def edit_tip(tip_id):
     tip = Tip.query.get_or_404(tip_id)
     data = request.get_json()
@@ -88,7 +88,7 @@ def edit_tip(tip_id):
     try:
         validated_data = schema.load(data)
     except ValidationError as err:
-        return jsonify({'errors': err.messages}), 400
+        return jsonify({'errors.py': err.messages}), 400
 
     # Apply updates
     for key, value in validated_data.items():
@@ -100,7 +100,7 @@ def edit_tip(tip_id):
 
 @admin_blueprint.route('/delete_tip/<int:tip_id>', methods=['DELETE'])
 @jwt_required()
-@admin_required
+@role_required(["admin"], "Admin access required")
 def delete_tip(tip_id):
     tip = Tip.query.get_or_404(tip_id)
     db.session.delete(tip)

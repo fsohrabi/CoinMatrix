@@ -18,7 +18,7 @@ from flask import request, jsonify, Blueprint, current_app
 from marshmallow import ValidationError
 
 from src.models.users import User
-from src.routes.helpers import add_token_to_database, revoke_token, is_token_revoked
+from src.utils.helpers import add_token_to_database, revoke_token, is_token_revoked
 from src.schemas.user import UserCreateSchema
 from flask_jwt_extended import (
     create_access_token,
@@ -61,7 +61,7 @@ def register():
         assign_role_to_user(user, "user")
         return jsonify({"message": "User registered successfully"}), 201
     except ValidationError as err:
-        return jsonify({"errors": err.messages}), 400
+        return jsonify({"errors.py": err.messages}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -91,7 +91,7 @@ def login():
         add_token_to_database(refresh_token)
         return jsonify({"access_token": access_token, "refresh_token": refresh_token}), 200
     except ValidationError as err:
-        return jsonify({"errors": err.messages}), 400
+        return jsonify({"errors.py": err.messages}), 400
 
 
 @auth_blueprint.route("/refresh", methods=["POST"])

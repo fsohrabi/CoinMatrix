@@ -11,6 +11,7 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     _password = db.Column('password', db.String(255), nullable=False)
     roles = db.relationship("Role", secondary="user_roles", back_populates="users")
+    watchlist = db.relationship('Watchlist', back_populates='user', cascade='all, delete-orphan')
 
     @hybrid_property
     def password(self):

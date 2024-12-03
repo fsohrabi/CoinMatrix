@@ -1,11 +1,11 @@
-from flask import request, jsonify, Blueprint, current_app
+import os
+import requests
+from flask import request, jsonify, Blueprint
 from sqlalchemy.exc import NoResultFound
 
-from src import cache  # Ensure cache is initialized
-import requests
-import os
-
+from src import cache
 from src.models import Tip
+from src.utils.helpers import transform_data, transform_tips
 
 main_blueprint = Blueprint("main", __name__, url_prefix="/api/v1")
 
@@ -16,47 +16,58 @@ COIN_API_BASE_URL = "https://pro-api.coinmarketcap.com"
 @main_blueprint.route('/', methods=['GET'])
 def home():
     """
-    Fetch and return cryptocurrency data similar to CoinMarketCap's homepage with caching and pagination.
+    Fetch and return cryptocurrency data with caching and pagination.
+    Query Parameters:
+        - page (int): Page number (default: 1)
+        - limit (int): Items per page (default: 20)
     """
-    page = int(request.args.get('page', 1))
-    limit = int(request.args.get('limit', 20))
-    start = (page - 1) * limit
-    parameters = {
-        'start': start + 1,
-        'limit': limit,
-        'convert': 'USD'
-    }
-    cached_data = cache.get("cryptocurrencies")
-    if not cached_data:
-        # Fetch data from CoinMarketCap API
-        headers = {'Accepts': 'application/json', "X-CMC_PRO_API_KEY": COIN_API_KEY}
-        response = requests.get(f"{COIN_API_BASE_URL}/v1/cryptocurrency/listings/latest", headers=headers,
-                                params=parameters)
+    try:
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 20))
+        if page < 1 or limit < 1:
+            return jsonify({"error": "Page and limit must be positive integers"}), 400
 
-        if response.status_code != 200:
-            return jsonify({
-                "error": "Failed to fetch data from CoinMarketCap API",
-                "status_code": response.status_code,
-                "message": response.json().get("status", {}).get("error_message", "Unknown error")
-            }), 500
+        start = (page - 1) * limit
+        cache_key = f"cryptocurrencies_page_{page}_limit_{limit}"
+        cached_data = cache.get(cache_key)
 
-        api_data = response.json()
-        cryptocurrencies = api_data.get("data", [])  # Extract the list of cryptocurrencies
-        total_count = api_data.get("status", {}).get("total_count", 0)  # Get total count of cryptocurrencies
+        if not cached_data:
+            # Fetch data from CoinMarketCap API
+            headers = {'Accepts': 'application/json', "X-CMC_PRO_API_KEY": COIN_API_KEY}
+            response = requests.get(
+                f"{COIN_API_BASE_URL}/v1/cryptocurrency/listings/latest",
+                headers=headers,
+                params={'start': start + 1, 'limit': limit, 'convert': 'USD'}
+            )
 
-        # Cache the data
-        cache.set("cryptocurrencies", cryptocurrencies, timeout=60)
-    else:
-        cryptocurrencies = cached_data
-        total_count = len(cryptocurrencies)  # Fallback if no total count is available
+            if response.status_code != 200:
+                return jsonify({
+                    "error": "Failed to fetch data from CoinMarketCap API",
+                    "status_code": response.status_code,
+                    "message": response.json().get("status", {}).get("error_message", "Unknown error")
+                }), 500
 
-    transformed_data = transform_data(cryptocurrencies)
-    return jsonify({
-        "page": page,
-        "limit": limit,
-        "total": total_count,
-        "data": transformed_data
-    }), 200
+            api_data = response.json()
+            cryptocurrencies = api_data.get("data", [])
+            total_count = api_data.get("status", {}).get("total_count", 0)
+
+            cache.set(cache_key, cryptocurrencies, timeout=60)
+        else:
+            cryptocurrencies = cached_data
+            total_count = len(cached_data)
+
+        transformed_data = transform_data(cryptocurrencies)
+        return jsonify({
+            "page": page,
+            "limit": limit,
+            "total": total_count,
+            "data": transformed_data
+        }), 200
+
+    except ValueError:
+        return jsonify({"error": "Invalid page or limit value"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @main_blueprint.route('/coin/<coin_id>', methods=['GET'])
@@ -91,36 +102,32 @@ def get_coin_data(coin_id):
 def tips():
     """
     Endpoint to fetch paginated tips.
+    Query Parameters:
+        - page (int): Page number (default: 1)
+        - limit (int): Items per page (default: 20)
     """
     try:
-        # Get page and limit parameters from the request
         page = int(request.args.get('page', 1))
         limit = int(request.args.get('limit', 20))
+
+        if page < 1 or limit < 1:
+            return jsonify({"error": "Page and limit must be positive integers"}), 400
 
         pagination = Tip.query.filter_by(is_active=True).paginate(page=page, per_page=limit, error_out=False)
         tips_data = pagination.items
 
-        # Prepare the response with pagination metadata
         return jsonify({
             "page": pagination.page,
             "total_pages": pagination.pages,
             "total_items": pagination.total,
             "limit": limit,
-            "data": [
-                {
-                    "id": tip.id,
-                    "title": tip.title,
-                    "description": tip.description,
-                    "created_at": tip.created_at.isoformat(),
-                    "image": tip.image,
-                    "category": tip.category
-                }
-                for tip in tips_data
-            ]
+            "data": transform_tips(tips_data)
         }), 200
 
     except NoResultFound:
         return jsonify({"error": "No tips found"}), 404
+    except ValueError:
+        return jsonify({"error": "Invalid page or limit value"}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -150,20 +157,3 @@ def show_tip(tip_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-def transform_data(response):
-    formatted_data = []
-    for item in response:
-        formatted_data.append({
-            "id": item['id'],
-            "name": item['name'],
-            "symbol": item['symbol'],
-            "price": round(item['quote']['USD']['price'], 2),
-            "percent_change_1h": round(item['quote']['USD']['percent_change_1h'], 2),
-            "percent_change_24h": round(item['quote']['USD']['percent_change_24h'], 2),
-            "percent_change_7d": round(item['quote']['USD']['percent_change_7d'], 2),
-            "market_cap": round(item['quote']['USD']['market_cap'], 2),
-            "volume_24h": round(item['quote']['USD']['volume_24h'], 2),
-            "circulating_supply": item['circulating_supply']
-        })
-    return {"data": formatted_data}
