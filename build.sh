@@ -2,8 +2,8 @@
 # Install Python dependencies
 pip install -r requirements.txt
 
-# Apply database migrations
-alembic upgrade head
+# Run Alembic migrations (specify config if not in the root)
+alembic -c migrations/alembic.ini upgrade head
 
 # Any other commands your app needs to initialize (e.g., collect static files)
 echo "Build script completed."
