@@ -47,8 +47,8 @@ def create_app():
     with app.app_context():
         # Seed roles and admin user
         from src.utils.user_role_utils import seed_admin_user, seed_roles
-        #seed_roles()
-        #seed_admin_user()
+        seed_roles()
+        seed_admin_user()
 
     # Register blueprints
     from src.routes.auth import auth_blueprint
