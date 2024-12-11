@@ -26,7 +26,8 @@ def home():
         'limit': limit,
         'convert': 'USD'
     }
-    cached_data = cache.get("cryptocurrencies")
+    cache_key = f"cryptocurrencies_page_{page}_limit_{limit}"
+    cached_data = cache.get(cache_key)
     if not cached_data:
         # Fetch data from CoinMarketCap API
         headers = {'Accepts': 'application/json', "X-CMC_PRO_API_KEY": COIN_API_KEY}
@@ -41,14 +42,13 @@ def home():
             }), 500
 
         api_data = response.json()
-        cryptocurrencies = api_data.get("data", [])  # Extract the list of cryptocurrencies
-        total_count = api_data.get("status", {}).get("total_count", 0)  # Get total count of cryptocurrencies
+        cryptocurrencies = api_data.get("data", [])
+        total_count = api_data.get("status", {}).get("total_count", 0)
 
-        # Cache the data
-        cache.set("cryptocurrencies", cryptocurrencies, timeout=60)
+        cache.set(cache_key, {"data": cryptocurrencies, "total_count": total_count}, timeout=60)
     else:
-        cryptocurrencies = cached_data
-        total_count = len(cryptocurrencies)  # Fallback if no total count is available
+        cryptocurrencies = cached_data.get("data", [])
+        total_count = cached_data.get("total_count", 0)
 
     transformed_data = transform_data(cryptocurrencies)
     return jsonify({
@@ -150,6 +150,18 @@ def show_tip(tip_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+def format_price(price):
+    if price == 0:
+        return 0
+    elif price < 0.00000001:
+        return round(price, 11)
+    elif price < 0.0001:
+        return round(price, 8)  # Small numbers, retain 8 decimal places
+    elif price < 1:
+        return round(price, 4)  # Moderate numbers, retain 4 decimal places
+    else:
+        return round(price, 2)  # Larger numbers, retain 2 decimal places
+
 
 def transform_data(response):
     formatted_data = []
@@ -158,7 +170,7 @@ def transform_data(response):
             "id": item['id'],
             "name": item['name'],
             "symbol": item['symbol'],
-            "price": round(item['quote']['USD']['price'], 2),
+            "price": format_price(item['quote']['USD']["price"]),
             "percent_change_1h": round(item['quote']['USD']['percent_change_1h'], 2),
             "percent_change_24h": round(item['quote']['USD']['percent_change_24h'], 2),
             "percent_change_7d": round(item['quote']['USD']['percent_change_7d'], 2),
