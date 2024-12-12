@@ -7,6 +7,7 @@ from passlib.context import CryptContext
 from .config import config
 import os
 from dotenv import load_dotenv
+from flask_cors import CORS
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -27,6 +28,7 @@ def create_app():
     :raises ValueError: If FLASK_ENV environment variable is not valid
     """
     app = Flask(__name__)
+    CORS(app)
 
     # Load environment-specific configuration
     env = os.getenv("FLASK_ENV")
