@@ -1,5 +1,6 @@
 import  { useState } from "react";
 import {Link} from "react-router-dom";
+import Pagination from "../../Pagination";
 
 const newsItems = [
     {
@@ -46,10 +47,13 @@ const newsItems = [
 
 export default function News() {
     const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
     const itemsPerPage = 2;
 
     const handlePageChange = (page) => {
-        setCurrentPage(page);
+        if (page > 0 && page <= totalPages) {
+            setCurrentPage(page);
+        }
     };
 
     const paginatedItems = newsItems.slice(
@@ -87,23 +91,14 @@ export default function News() {
             ))}
 
             {/* Pagination */}
-            <div className="join  mt-5 mb-3 flex justify-center">
-                {[...Array(Math.ceil(newsItems.length / itemsPerPage)).keys()].map(
-                    (num) => (
-                        <input
-                            key={num}
-                            className={`join-item btn btn-square bg-[#f6f8fe] ${
-                                currentPage === num + 1 ? "bg-blue-600 text-white" : ""
-                            }`}
-                            type="radio"
-                            name="options"
-                            aria-label={` ${num + 1}`}
-                            checked={currentPage === num + 1}
-                            onChange={() => handlePageChange(num + 1)}
-                        />
-                    )
-                )}
-            </div>
+            {totalPages > 1 &&
+               <Pagination
+                currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+        />
+            }
+
         </div>
     );
 }
