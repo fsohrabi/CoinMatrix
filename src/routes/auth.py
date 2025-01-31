@@ -85,7 +85,11 @@ def login():
     try:
         data = schema.load(request.json)
         user = schema.validate_credentials(data)
-        access_token = create_access_token(identity=user.id)
+        access_token = create_access_token(identity=user.id, additional_claims={
+            "email": user.email,
+            "admin": user.has_role("admin"),
+            "name": user.name
+        })
         refresh_token = create_refresh_token(identity=user.id)
         add_token_to_database(access_token)
         add_token_to_database(refresh_token)

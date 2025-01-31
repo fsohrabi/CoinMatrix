@@ -13,10 +13,9 @@ class UserSchema(Schema):
 
     @validates_schema
     def validate_email(self, data, **kwargs):
-        """Ensure the email is unique."""
+        """Ensure the email is unique and attach the error to the 'email' field."""
         if User.query.filter_by(email=data.get("email")).count():
-            raise ValidationError(f"Email {data['email']} already exists.")
-
+            raise ValidationError({"email": ["Your email  already exists."]})
 
 class UserCreateSchema(UserSchema):
     """Schema for creating a new user, including password validation."""
