@@ -14,19 +14,20 @@ Routes:
 - /revoke_refresh: Revoke a refresh token.
 """
 
-from flask import request, jsonify, Blueprint, current_app
+from flask import request, jsonify, Blueprint, current_app, make_response
 from marshmallow import ValidationError
 
 from src.models.users import User
 from src.routes.helpers import add_token_to_database, revoke_token, is_token_revoked
 from src.schemas.user import UserCreateSchema
+from jwt.exceptions import InvalidTokenError
 from flask_jwt_extended import (
-    create_access_token,
-    create_refresh_token,
-    jwt_required,
-    get_jwt_identity,
-    get_jwt,
+    JWTManager, jwt_required, create_access_token,
+    create_refresh_token, get_jwt,
+    get_jwt_identity, set_access_cookies,
+    set_refresh_cookies, unset_jwt_cookies
 )
+
 from src import db, jwt
 from src.schemas.user_login_schema import UserLoginSchema
 from src.utils.user_role_utils import assign_role_to_user
@@ -85,15 +86,15 @@ def login():
     try:
         data = schema.load(request.json)
         user = schema.validate_credentials(data)
-        access_token = create_access_token(identity=user.id, additional_claims={
-            "email": user.email,
-            "admin": user.has_role("admin"),
-            "name": user.name
-        })
+        access_token = create_access_token(identity=user.id)
         refresh_token = create_refresh_token(identity=user.id)
         add_token_to_database(access_token)
         add_token_to_database(refresh_token)
-        return jsonify({"access_token": access_token, "refresh_token": refresh_token}), 200
+        # Set HTTP-only cookies
+        response = make_response(jsonify({"message": "Login successful"}), 200)
+        response.set_cookie("access_token", access_token, httponly=True, secure=False, samesite="Lax")
+        response.set_cookie("refresh_token", refresh_token, httponly=True, secure=False, samesite="Lax")
+        return response
     except ValidationError as err:
         return jsonify({"errors": err.messages}), 400
 
@@ -113,6 +114,47 @@ def refresh():
     return jsonify({"access_token": access_token}), 200
 
 
+@auth_blueprint.route("/logout", methods=["DELETE"])
+@jwt_required()
+def logout():
+    """
+    Logs out the user by revoking their access token.
+    """
+    jti = get_jwt()["jti"]
+    revoke_token(jti, get_jwt_identity())
+    response = make_response(jsonify({"message": "Logged out"}), 200)
+    unset_jwt_cookies(response)
+    response.delete_cookie("access_token")
+    response.delete_cookie("refresh_token")
+    return response
+
+
+@auth_blueprint.route("/me", methods=["GET"])
+@jwt_required()
+def get_current_user():
+    """
+    Get the currently logged-in user's information.
+    """
+    token = request.cookies.get("access_token")
+    if not token:
+        return jsonify({"message": "Unauthorized"}), 401
+
+    try:
+        user_id = get_jwt_identity()
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({"message": "Unauthorized"}), 401
+
+        return jsonify({
+            "id": user.id,
+            "name": user.name,
+            "admin": user.has_role("admin"),
+            "email": user.email
+        })
+    except InvalidTokenError:
+        return jsonify({"message": "Invalid token"}), 401
+
+
 @auth_blueprint.route("/revoke_access", methods=["DELETE"])
 @jwt_required()
 def revoke_access_token():
@@ -123,8 +165,7 @@ def revoke_access_token():
     - 200: Success message confirming token revocation.
     """
     jti = get_jwt()["jti"]
-    user_identity = get_jwt_identity()
-    revoke_token(jti, user_identity)
+    revoke_token(jti, get_jwt_identity())
     return jsonify({"message": "token revoked"}), 200
 
 
@@ -138,8 +179,7 @@ def revoke_refresh_token():
     - 200: Success message confirming token revocation.
     """
     jti = get_jwt()["jti"]
-    user_identity = get_jwt_identity()
-    revoke_token(jti, user_identity)
+    revoke_token(jti, get_jwt_identity())
     return jsonify({"message": "token revoked"}), 200
 
 

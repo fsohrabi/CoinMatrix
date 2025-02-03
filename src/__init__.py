@@ -17,6 +17,7 @@ db = SQLAlchemy()
 migrate = Migrate()
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 jwt = JWTManager()
+
 cache = Cache()
 
 
@@ -28,7 +29,7 @@ def create_app():
     :raises ValueError: If FLASK_ENV environment variable is not valid
     """
     app = Flask(__name__)
-    CORS(app)
+    CORS(app, supports_credentials=True, origins="*" )
 
     # Load environment-specific configuration
     env = os.getenv("FLASK_ENV")
@@ -41,7 +42,7 @@ def create_app():
     # Initialize Flask extensions
     db.init_app(app)
     migrate.init_app(app, db)
-    jwt.init_app(app)
+    jwt = JWTManager(app)
     cache.init_app(app)
 
     # Import models to ensure they are registered with SQLAlchemy
