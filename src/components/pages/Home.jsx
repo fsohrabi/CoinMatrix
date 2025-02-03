@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { FaArrowUp, FaArrowDown } from "react-icons/fa";
 import { useState, useEffect } from "react";
-import { fetchCryptosAPI } from "../../../api.js";
+import { fetchCryptosAPI } from "../api/crypto.js";
 import Pagination from "../Pagination";
 
 export default function Home() {

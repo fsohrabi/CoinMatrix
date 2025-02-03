@@ -1,16 +1,11 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useAuth } from "./contexts/AuthContext";
 
 export default function Header() {
-    // Simulated authentication state
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-    const handleLogout = () => {
-        setIsAuthenticated(false); // Log out the user
-    };
+    const { user, handleLogout } = useAuth(); // Use AuthContext for authentication state
 
     return (
-        <div className="navbar p-4 " >
+        <div className="navbar p-4">
             {/* Logo */}
             <div className="flex-1">
                 <Link
@@ -24,7 +19,7 @@ export default function Header() {
 
             {/* Login or Profile Dropdown */}
             <div className="flex-none">
-                {isAuthenticated ? (
+                {user ? (
                     <div className="dropdown dropdown-end">
                         <div
                             tabIndex={0}
@@ -42,6 +37,9 @@ export default function Header() {
                             tabIndex={0}
                             className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
                         >
+                            <li>
+                                <span>{user.name}</span> {/* Display user's name */}
+                            </li>
                             <li>
                                 <button onClick={handleLogout}>Logout</button>
                             </li>
