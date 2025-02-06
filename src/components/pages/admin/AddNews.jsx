@@ -27,7 +27,7 @@ export default function AddNews() {
         setSuccessMessage(null);
 
         const formData = new FormData(e.target);
-
+        formData.set("is_active", e.target.is_active.checked ? "true" : "false");
         if (!image) {
             setErrors({ image: ["Image is required"] });
             return;
@@ -161,7 +161,7 @@ export default function AddNews() {
 
                         onChange={handleImageChange}
 
-                        className="w-full px-4 py-2 border rounded-md bg-white text-gray-800 focus:ring-2 focus:ring-yellow-400"
+                        className="w-full px-4 py-2 border rounded-md bg-white text-gray-800 focus:ring-2 focus:ring-yellow-400 file:border file:py-2 file:px-4 file:rounded-md file:bg-yellow-50 file:text-yellow-600"
 
                     />
 

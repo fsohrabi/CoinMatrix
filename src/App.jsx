@@ -11,7 +11,7 @@ import Home from './components/pages/Home';
 
 import './App.css'
 import About from "./components/pages/About.jsx";
-import News from "./components/pages/news/News.jsx";
+import News ,{loader as mainPageNewsLoader} from "./components/pages/news/News.jsx";
 import NewsShow from "./components/pages/news/NewsShow.jsx";
 import Login from "./components/pages/auth/Login.jsx";
 import Register, {action as RegisterAction} from "./components/pages/auth/Register.jsx";
@@ -28,7 +28,7 @@ function App() {
       <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="about" element={<About />} />
-          <Route path="news" element={<News />} />
+          <Route path="news" loader={mainPageNewsLoader} element={<News />} />
           <Route path="news/:id" element={<NewsShow />} />
 
           {/* Guest-only routes */}

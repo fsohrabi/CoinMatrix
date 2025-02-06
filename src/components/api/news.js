@@ -1,8 +1,10 @@
 const apiUrl = import.meta.env.VITE_APP_API_URL;
 
-export const fetchAllNews= async (page = 1, limit = 20)=>{
+export const fetchAllNews= async (page = 1, limit = 20, is_active=true)=>{
     try{
-        const response = await fetch(`${apiUrl}/tips?page=${page}&limit=${limit}`);
+        const url=is_active?apiUrl+"/tips":apiUrl+"/admin/tips"
+        const response = await fetch(`${url}?page=${page}&limit=${limit}`,
+            {credentials: "include"});
         if (!response.ok) {
             const errorData = await response.json(); // Try to get error details from the server
             throw new Error(errorData.message || "Failed to fetch news"); // Throw error with message
@@ -54,8 +56,7 @@ export const editeNews = async (id,data)=>{
     try {
         const response = await fetch(`${apiUrl}/admin/edit_tip/${id}`,{
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
+            body: data,
             credentials: "include",
         });
         const responseData = await response.json();

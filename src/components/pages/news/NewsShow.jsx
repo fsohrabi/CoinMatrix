@@ -1,36 +1,79 @@
 import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { fetchNewsById } from "../../api/news.js";
 
 export default function NewsShow() {
     const { id } = useParams();
-    const news = {
-        title: "Aliens Open a Cafe in the Suburbs",
-        description:
-            "In an event that seems straight out of a science-fiction novel, an alien species has reportedly opened a quaint café in the heart of suburban America. The establishment, aptly named 'Out of This World Coffee,' boasts a menu that includes gravity-defying cappuccinos, intergalactic lattes, and pastries shaped like constellations. \
-            Locals have reported seeing extraterrestrial beings managing the counter, taking orders, and even serving customers. Despite initial skepticism, the café has already drawn crowds from neighboring cities, with visitors curious to get a glimpse of this otherworldly phenomenon. Scientists and government officials are monitoring the situation, while the aliens maintain their focus on delivering exceptional customer service.",
-        category: "Science",
-        imageUrl: "https://images.unsplash.com/photo-1542744173-05336fcc7ad4",
-    };
+    const [news, setNewsData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [errors, setErrors] = useState(null);
 
+    useEffect(() => {
+        const loadData = async () => {
+            setLoading(true);
+            try {
+                const response = await fetchNewsById(id);
+                console.log("Fetched news:", response); // Debugging log
+
+                if (!response || response.errors) {
+                    setErrors(response.errors || [{ message: "Unknown error" }]);
+                } else if (response.data && response.data.length > 0) {
+                    setNewsData(response.data[0]);
+                } else {
+                    setErrors([{ message: "News not found" }]);
+                }
+            } catch (error) {
+                console.error("Error fetching news:", error);
+                setErrors([{ message: "Failed to load news. Please try again later." }]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadData();
+    }, [id]);
+
+    // Show loading state
+    if (loading) {
+        return (
+            <div className="flex justify-center py-10">
+                <span className="loading loading-spinner loading-lg text-primary"></span>
+            </div>
+        );
+    }
+
+    // Show error message
+    if (errors) {
+        return (
+            <div className="alert alert-error shadow-lg my-5">
+                {errors.map((err, index) => (
+                    <span key={index}>⚠️ {err.message}</span>
+                ))}
+            </div>
+        );
+    }
+
+    // Show news details
     return (
-        <div className=" rounded-xl max-w-4xl mx-auto">
+        <div className="rounded-xl max-w-4xl mx-auto">
             <div className="card bg-white shadow-md rounded-lg overflow-hidden mb-6">
                 <figure className="relative w-full overflow-hidden rounded-md">
                     <img
-                        src={news.imageUrl}
-                        alt={news.title}
+                        src={news?.image || "/default-news.jpg"} // Fallback image
+                        alt={news?.title || "News"}
                         className="w-full sm:h-48 md:h-64 object-cover"
                     />
                 </figure>
                 <div className="card-body p-4">
                     <h2 className="card-title text-xl font-semibold text-gray-800 mb-2">
-                        {news.title}
+                        {news?.title || "Untitled News"}
                     </h2>
                     <p className="text-base text-gray-700 text-left leading-relaxed">
-                        {news.description}
+                        {news?.description || "No description available."}
                     </p>
                     <div className="card-actions justify-end mt-4">
                         <div className="badge bg-gray-700 text-white px-3 py-1 rounded-md">
-                            {news.category}
+                            {news?.category || "Uncategorized"}
                         </div>
                     </div>
                 </div>
