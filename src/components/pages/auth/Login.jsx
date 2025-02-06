@@ -15,11 +15,12 @@ export default function Login() {
         const password = formData.get("password");
 
         const data = await handleLogin({ email, password });
-
         if (data && data.errors) { // Correctly check for errors
             setErrors(data.errors);
-        } else {
-            navigate("/dashboard/admin"); // Navigate to admin dashboard
+        } else if (data?.admin === true) {
+            navigate("/admin"); // Navigate to admin dashboard
+        }else{
+            navigate("/");
         }
     };
 

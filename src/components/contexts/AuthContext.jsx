@@ -15,16 +15,19 @@ export const AuthProvider = ({ children }) => {
                 const data = await fetchCurrentUser();
                 setUser(data);
             } catch (error) {
-                setUser(null); // Important: Set user to null on error
+                console.error("Error fetching user:", error);
+                setUser(null); // Explicitly set user to null on error
             } finally {
-                setLoading(false);
+                setLoading(false); // Ensure loading stops
                 setHasAttemptedInitialAuth(true);
             }
         };
+
         if (!hasAttemptedInitialAuth) {
             initializeUser();
         }
     }, [hasAttemptedInitialAuth]);
+
 
     const handleLogin = async (userData) => {
         const response = await login(userData);

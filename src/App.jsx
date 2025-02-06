@@ -17,23 +17,34 @@ import Login from "./components/pages/auth/Login.jsx";
 import Register, {action as RegisterAction} from "./components/pages/auth/Register.jsx";
 import AuthProvider from "./components/contexts/AuthContext.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
-import Dashboard from "./components/pages/admin/Dashboard.jsx";
-
+import Dashboard,{loader as newsLoader} from "./components/pages/admin/Dashboard.jsx";
+import AddNews from "./components/pages/admin/AddNews.jsx";
+import EditNews from "./components/pages/admin/EditNews.jsx";
+import GuestRoute from "./components/GuestRoute.jsx";
 
 function App() {
   const router = createBrowserRouter(createRoutesFromElements(
 
-    <Route path = "/" element= {<Layout />}>
-        <Route index element={<Home />}  />
-        <Route path="about" element={<About />} />
-        <Route path="news" element={<News />} />
-        <Route path="news/:id" element={<NewsShow />} />
-        <Route path="/dashboard/*" element={<ProtectedRoute isAuthenticated={false} />}>
-            <Route path="admin" element={<Dashboard />} />
-        </Route>
-        <Route path="login"   element={<Login />} />
-        <Route path="register"  action={RegisterAction}  element={<Register />} />
-    </Route>
+      <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="about" element={<About />} />
+          <Route path="news" element={<News />} />
+          <Route path="news/:id" element={<NewsShow />} />
+
+          {/* Guest-only routes */}
+          <Route element={<GuestRoute />}>
+              <Route path="login" element={<Login />} />
+              <Route path="register" action={RegisterAction} element={<Register />} />
+          </Route>
+
+          {/* Protected admin routes */}
+          <Route path="/admin/*" element={<ProtectedRoute />}>
+              <Route index loader={newsLoader} element={<Dashboard />} />
+              <Route path="news/add" element={<AddNews />} />
+              <Route path="news/edit/:id" element={<EditNews />} />
+          </Route>
+      </Route>
+
 
   ));
   return (
