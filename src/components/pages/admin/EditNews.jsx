@@ -151,21 +151,19 @@ export default function EditNews() {
                         />
                     </div>
                 </div>
-                <div className="flex items-center">
-
-                    <input
-                        id="is_active"
-                        name="is_active"
-                        type="checkbox"
-                        checked={newsData?.is_active || false} // Avoids undefined errors
-                        onChange={(e) => setNewsData({...newsData, is_active: e.target.checked})}
-                        className="mr-2"
-                    />
-
-                    <label htmlFor="is_active" className="text-sm font-semibold text-gray-700">Active</label>
-
+                {/* Is Active Checkbox */}
+                <div className="form-control flex items-start">
+                    <label className="cursor-pointer label">
+                        <span className="label-text">Active</span>
+                        <input
+                            id="is_active"
+                            name="is_active"
+                            type="checkbox"
+                            checked={newsData?.is_active || false} // Avoids undefined errors
+                            onChange={(e) => setNewsData({...newsData, is_active: e.target.checked})}
+                            className="checkbox checkbox-primary"/>
+                    </label>
                 </div>
-
 
                 <button
                     type="submit"

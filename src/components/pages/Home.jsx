@@ -1,10 +1,20 @@
-import { Link } from "react-router-dom";
+import { Link, useLoaderData } from "react-router-dom";
+import { fetchAllNews } from "../api/news";
 import { FaArrowUp, FaArrowDown } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { fetchCryptosAPI } from "../api/crypto.js";
 import Pagination from "../Pagination";
 
+export async function loader({ request }) {
+    try {
+        const response = await fetchAllNews(1, 10);
+        return response;
+    } catch (error) {
+        console.error("Error in loader:", error);
+    }
+}
 export default function Home() {
+    const { data: news} = useLoaderData();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -12,11 +22,6 @@ export default function Home() {
     const [totalPages, setTotalPages] = useState(1);
     const [showData, setShowData] = useState(true);
 
-    const news = [
-        { id: 1, title: "Exciting New Feature Released!", image: "https://cryptologos.cc/logos/bitcoin-btc-logo.png?v=040" },
-        { id: 2, title: "2023 Development Updates Announced!", image: "https://cryptologos.cc/logos/ethereum-eth-logo.png?v=040" },
-        { id: 3, title: "New Crypto Trends to Watch!", image: "https://cryptologos.cc/logos/cardano-ada-logo.png?v=040" },
-    ];
 
     const fetchData = async () => {
         try {
@@ -136,7 +141,7 @@ export default function Home() {
                     {news.map((item) => (
                         <div key={item.id} className="flex items-start space-x-2 p-2 rounded-lg hover:bg-gray-50 transition">
                             <img src={item.image} alt={item.title} className="w-8 h-8 object-cover rounded-lg" />
-                            <h4 className="text-sm font-medium text-gray-700 text-left">{item.title}</h4>
+                            <h4 className="text-sm font-medium text-gray-700 text-left line-clamp-2">{item.title}</h4>
                         </div>
                     ))}
                 </div>

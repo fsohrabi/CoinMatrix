@@ -96,12 +96,12 @@ export default function AddNews() {
                 </div>
 
 
-
                 {/* Description Field */}
 
                 <div>
 
-                    <label htmlFor="description" className="block text-sm font-semibold text-gray-700">Description</label>
+                    <label htmlFor="description"
+                           className="block text-sm font-semibold text-gray-700">Description</label>
 
                     <textarea
 
@@ -116,7 +116,6 @@ export default function AddNews() {
                     />
 
                 </div>
-
 
 
                 {/* Category Field */}
@@ -140,7 +139,6 @@ export default function AddNews() {
                     />
 
                 </div>
-
 
 
                 {/* Image Upload */}
@@ -170,29 +168,20 @@ export default function AddNews() {
                 </div>
 
 
-
                 {/* Is Active Checkbox */}
+                <div className="form-control flex items-start">
+                    <label className="cursor-pointer label">
+                        <span className="label-text">Active</span>
+                        <input id="is_active"
 
-                <div className="flex items-center">
+                               name="is_active"
 
-                    <input
+                               type="checkbox"
 
-                        id="is_active"
-
-                        name="is_active"
-
-                        type="checkbox"
-
-                        defaultChecked
-
-                        className="mr-2"
-
-                    />
-
-                    <label htmlFor="is_active" className="text-sm font-semibold text-gray-700">Active</label>
-
+                               defaultChecked
+                               className="checkbox checkbox-primary"/>
+                    </label>
                 </div>
-
 
 
                 {/* Submit Button */}

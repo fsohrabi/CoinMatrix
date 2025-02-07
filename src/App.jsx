@@ -7,7 +7,7 @@ import {
 } from "react-router-dom"
 
 import Layout from "./components/Layout.jsx";
-import Home from './components/pages/Home';
+import Home ,{loader as lastNewsHomePage}from './components/pages/Home';
 
 import './App.css'
 import About from "./components/pages/About.jsx";
@@ -26,7 +26,7 @@ function App() {
   const router = createBrowserRouter(createRoutesFromElements(
 
       <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
+          <Route index loader={lastNewsHomePage} element={<Home />} />
           <Route path="about" element={<About />} />
           <Route path="news" loader={mainPageNewsLoader} element={<News />} />
           <Route path="news/:id" element={<NewsShow />} />
