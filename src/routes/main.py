@@ -1,7 +1,6 @@
 from flask import request, jsonify, Blueprint, current_app
 from sqlalchemy.exc import NoResultFound
-
-from src import cache  # Ensure cache is initialized
+from src import cache
 import requests
 import os
 
@@ -93,11 +92,10 @@ def tips():
     Endpoint to fetch paginated tips.
     """
     try:
-        # Get page and limit parameters from the request
         page = int(request.args.get('page', 1))
         limit = int(request.args.get('limit', 20))
-
         pagination = Tip.query.filter_by(is_active=True).paginate(page=page, per_page=limit, error_out=False)
+
         tips_data = pagination.items
 
         # Prepare the response with pagination metadata
@@ -112,8 +110,10 @@ def tips():
                     "title": tip.title,
                     "description": tip.description,
                     "created_at": tip.created_at.isoformat(),
+                    "updated_at": tip.updated_at.isoformat(),
                     "image": tip.image,
-                    "category": tip.category
+                    "category": tip.category,
+                    "is_active": tip.is_active
                 }
                 for tip in tips_data
             ]
@@ -140,7 +140,8 @@ def show_tip(tip_id):
                     "description": tip.description,
                     "created_at": tip.created_at.isoformat(),
                     "image": tip.image,
-                    "category": tip.category
+                    "category": tip.category,
+                    "is_active": tip.is_active
                 }]
 
         }), 200
@@ -149,6 +150,7 @@ def show_tip(tip_id):
         return jsonify({"error": "No tips found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 def format_price(price):
     if price == 0:

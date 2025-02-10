@@ -1,39 +1,60 @@
-from flask import request, jsonify, current_app, Blueprint, url_for
+from flask import request, jsonify, Blueprint
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from marshmallow import ValidationError
-from werkzeug.utils import secure_filename
+from sqlalchemy.exc import NoResultFound
+
 from src import db
 from src.models import Tip
-import os
-
 from src.routes.decorators import admin_required
 from src.schemas.tip import TipSchema
+from src.utils.handle_image_upload import handle_image_upload
 
 admin_blueprint = Blueprint("admin", __name__, url_prefix="/api/v1/admin")
 
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
-
-
-@admin_blueprint.route('/upload_image', methods=['POST'])
+@admin_blueprint.route('/tips', methods=['GET'])
 @jwt_required()
 @admin_required
-def upload_image():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
-    if request.content_length > current_app.config['MAX_CONTENT_LENGTH']:
-        return jsonify({'error': 'File size exceeds the maximum limit of 5 MB'}), 413
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-        file.save(file_path)
-        image_url = url_for("static", filename=f"uploads/{filename}", _external=True)
-        return jsonify({'message': 'File uploaded successfully', 'image_url': image_url}), 201
-    return jsonify({'error': 'Invalid file type'}), 400
+def tips():
+    """
+    Endpoint to fetch paginated tips for admin.
+    """
+    try:
+        get_jwt_identity()
+    except Exception as e:
+        return jsonify({'error': 'Authentication failed', 'details': str(e)}), 422
+    try:
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 20))
+        pagination = Tip.query.paginate(page=page, per_page=limit, error_out=False)
+
+        tips_data = pagination.items
+
+        # Prepare the response with pagination metadata
+        return jsonify({
+            "page": pagination.page,
+            "total_pages": pagination.pages,
+            "total_items": pagination.total,
+            "limit": limit,
+            "data": [
+                {
+                    "id": tip.id,
+                    "title": tip.title,
+                    "description": tip.description,
+                    "created_at": tip.created_at.isoformat(),
+                    "updated_at": tip.updated_at.isoformat(),
+                    "image": tip.image,
+                    "category": tip.category,
+                    "is_active": tip.is_active
+                }
+                for tip in tips_data
+            ]
+        }), 200
+
+    except NoResultFound:
+        return jsonify({"error": "No tips found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @admin_blueprint.route('/create_tip', methods=['POST'])
@@ -41,32 +62,36 @@ def upload_image():
 @admin_required
 def create_tip():
     try:
-        identity = get_jwt_identity()
-        print(f"Authenticated user: {identity}")
+        get_jwt_identity()
     except Exception as e:
         return jsonify({'error': 'Authentication failed', 'details': str(e)}), 422
 
-    # Parse request data
-    data = request.get_json()
-    if not data:
-        return jsonify({'error': 'Invalid JSON or missing payload'}), 400
+    # Handle image upload
+    image = None
+    if 'image' in request.files and request.files['image'].filename != '':
+        image_file = request.files['image']
+        image, error_message = handle_image_upload(image_file)
+        if error_message:
+            return jsonify({'error': 'Image upload failed', 'details': error_message}), 500
+    else:
+        return jsonify({'error': 'Image is required.'}), 400  # Ensure image is always provided
 
-    # Validate input using Marshmallow
+    data = {
+        'title': request.form.get('title'),
+        'description': request.form.get('description'),
+        'category': request.form.get('category'),
+        'is_active': request.form.get('is_active'),
+        'image': image,  # Use the uploaded image URL/path
+    }
+
     schema = TipSchema()
     try:
         validated_data = schema.load(data)
     except ValidationError as err:
         return jsonify({'errors': err.messages}), 400
 
-    # Create and save the Tip
     try:
-        tip = Tip(
-            title=validated_data['title'],
-            description=validated_data['description'],
-            category=validated_data['category'],
-            image=validated_data['image_url'],
-            is_active=validated_data.get('is_active', True),
-        )
+        tip = Tip(**validated_data)
         db.session.add(tip)
         db.session.commit()
     except Exception as db_err:
@@ -80,17 +105,36 @@ def create_tip():
 @jwt_required()
 @admin_required
 def edit_tip(tip_id):
-    tip = Tip.query.get_or_404(tip_id)
-    data = request.get_json()
+    try:
+        get_jwt_identity()
+    except Exception as e:
+        return jsonify({'error': 'Authentication failed', 'details': str(e)}), 422
 
-    # Validate input using Marshmallow
+    tip = Tip.query.get_or_404(tip_id)
+
+    data = request.form.to_dict()
+
+    # Handle image upload
+    if 'image' in request.files and request.files['image'].filename != '':
+        image_file = request.files['image']
+        image, error_message = handle_image_upload(image_file)
+        if error_message:
+            return jsonify({'error': 'Image upload failed', 'details': error_message}), 500
+        data['image'] = image
+    else:
+        data['image'] = tip.image  # Keep existing image if no new one is provided
+
+    # Ensure an image is always present
+    if not data.get('image'):
+        return jsonify({'error': 'Image is required.'}), 400
+
+    # Validate input
     schema = TipSchema(partial=True)
     try:
         validated_data = schema.load(data)
     except ValidationError as err:
         return jsonify({'errors': err.messages}), 400
 
-    # Apply updates
     for key, value in validated_data.items():
         setattr(tip, key, value)
 

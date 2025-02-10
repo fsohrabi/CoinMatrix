@@ -29,7 +29,7 @@ def create_app():
     :raises ValueError: If FLASK_ENV environment variable is not valid
     """
     app = Flask(__name__)
-    CORS(app, supports_credentials=True, origins="*" )
+    CORS(app, supports_credentials=True, origins="*")
 
     # Load environment-specific configuration
     env = os.getenv("FLASK_ENV")
@@ -42,12 +42,13 @@ def create_app():
     # Initialize Flask extensions
     db.init_app(app)
     migrate.init_app(app, db)
-    jwt = JWTManager(app)
+    jwt.init_app(app)
     cache.init_app(app)
 
     # Import models to ensure they are registered with SQLAlchemy
     import src.models
     with app.app_context():
+        db.create_all()
         # Seed roles and admin user
         from src.utils.user_role_utils import seed_admin_user, seed_roles
         seed_roles()
