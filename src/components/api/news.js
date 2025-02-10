@@ -52,7 +52,7 @@ export const addNews = async (formData) => {
     }
 };
 
-export const editeNews = async (id,data)=>{
+export const editNews = async (id,data)=>{
     try {
         const response = await fetch(`${apiUrl}/admin/edit_tip/${id}`,{
             method: "PUT",

@@ -6,11 +6,11 @@ export default function Header() {
     const { user, handleLogout } = useAuth();
 
     return (
-        <div className="navbar p-4">
+        <div className="navbar px-14 pt-8 ">
             {/* Logo */}
             <div className="flex-1">
                 <Link
-                    to="/"
+                    to={user?.admin?"admin": "/"}
                     className="font-bold text-2xl no-underline text-yellow-400 hover:text-yellow-400"
                     style={{ display: "inline-flex", textDecoration: "none", cursor: "pointer" }}
                 >

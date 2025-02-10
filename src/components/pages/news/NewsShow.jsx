@@ -68,9 +68,10 @@ export default function NewsShow() {
                     <h2 className="card-title text-xl font-semibold text-gray-800 mb-2">
                         {news?.title || "Untitled News"}
                     </h2>
-                    <p className="text-base text-gray-700 text-left leading-relaxed">
-                        {news?.description || "No description available."}
-                    </p>
+                    <div
+                        className="text-base text-gray-700 text-left leading-relaxed"
+                        dangerouslySetInnerHTML={{__html: news?.description || "No description available."}}
+                    ></div>
                     <div className="card-actions justify-end mt-4">
                         <div className="badge bg-gray-700 text-white px-3 py-1 rounded-md">
                             {news?.category || "Uncategorized"}

@@ -4,8 +4,14 @@ import { fetchAllNews } from "../../api/news.js";
 import { useNavigate, useLoaderData, Link, useLocation } from "react-router-dom";
 
 // Function to truncate long text
+const stripHtml = (html) => {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    return doc.body.textContent || "";
+};
+
 const truncateText = (text, maxLength) => {
-    return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
+    const plainText = stripHtml(text); // Remove HTML tags
+    return plainText.length > maxLength ? plainText.substring(0, maxLength) + "..." : plainText;
 };
 
 // Loader function to fetch news
@@ -45,7 +51,7 @@ export default function News() {
     };
 
     return (
-        <div className="p-6 max-w-5xl mx-auto">
+        <div className="max-w-5xl mx-auto">
             {/* Loading Indicator */}
             {loading && (
                 <div className="flex justify-center py-10">
@@ -70,7 +76,7 @@ export default function News() {
                     </Link>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                     {news.map((item, index) => (
                         <div
                             key={index}
@@ -92,7 +98,7 @@ export default function News() {
                                 </p>
                                 <div className="card-actions justify-end">
                                     <Link
-                                        className="btn btn-primary hover:bg-blue-700 transition"
+                                        className="btn bg-blue-600 hover:bg-blue-700 text-white transition"
                                         to={`/news/${item.id}`}
                                     >
                                         Read More

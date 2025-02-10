@@ -1,11 +1,11 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 
-const MenuItem = ({ to, icon, label }) => {
+const MenuItem = ({ to, icon, label,admin=false }) => {
     const setActive = ({ isActive }) =>`w-full flex items-center justify-between text-left px-3 py-2 my-1
-    ${isActive ? "text-[#083ea9] text-lg font-bold" : "text-[#eacd87] text-base font-normal"}
-    hover:text-[#083ea9] hover:scale-105 transition-all duration-300 ease-in-out
-    bg-transparent focus:bg-transparent focus:text-[#083ea9] active:bg-transparent focus:outline-none`;
+    ${isActive ? "text-blue-600 text-lg font-bold" : "text-yellow-400 text-base font-normal"}
+    hover:text-blue-600 hover:scale-105 transition-all duration-300 ease-in-out
+    bg-transparent focus:bg-transparent focus:text-blue-600 active:bg-transparent focus:outline-none`;
 
 
     return (
@@ -27,9 +27,9 @@ const MenuItem = ({ to, icon, label }) => {
                                     <path fill="currentColor" d={icon} />
                                 </svg>
                             )}
-                            {label} {/* Display the label */}
+                            {label}
                         </div>
-                        {isActive && <span className="text-[#083ea9] ml-2 text-xl">&gt;</span>}
+                        {(isActive && !admin) && <span className="text-blue-600 ml-2 text-xl">&gt;</span>}
                     </div>
                 )}
             </NavLink>
@@ -46,6 +46,7 @@ export default function Menu() {
             to: "/",
             icon: "M4 11h6a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1m0 10h6a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1m10 0h6a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1m7.293-14.707l-3.586-3.586a.999.999 0 0 0-1.414 0l-3.586 3.586a.999.999 0 0 0 0 1.414l3.586 3.586a.999.999 0 0 0 1.414 0l3.586-3.586a.999.999 0 0 0 0-1.414",
             label: "Dashboard",
+
         },
         {
             to: "/news",
@@ -65,15 +66,16 @@ export default function Menu() {
                 to: "admin",
                 icon: "M4 11h6a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1m0 10h6a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1m10 0h6a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1m7.293-14.707l-3.586-3.586a.999.999 0 0 0-1.414 0l-3.586 3.586a.999.999 0 0 0 0 1.414l3.586 3.586a.999.999 0 0 0 1.414 0l3.586-3.586a.999.999 0 0 0 0-1.414",
                 label: "Dashboard",
+                admin: true,
             },
         ];
     }
 
     return (
-        <ul className="menu w-full">
+        <ul className="menu w-full ">
             {menuItems.map((item) =>
                 item.show !== false ? ( // Check for explicit false, not just falsy
-                    <MenuItem key={item.to} to={item.to} icon={item.icon} label={item.label} />
+                    <MenuItem key={item.to} to={item.to} icon={item.icon} label={item.label} admin={item.admin} />
                 ) : null
             )}
         </ul>

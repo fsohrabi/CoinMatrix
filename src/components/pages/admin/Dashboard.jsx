@@ -42,8 +42,14 @@ export default function Dashboard() {
         }
     };
 
-    const limitText = (text, limit = 50) => {
-        return text.length > limit ? text.substring(0, limit) + '...' : text;
+    const stripHtml = (html) => {
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        return doc.body.textContent || "";
+    };
+
+    const truncateText = (text, maxLength) => {
+        const plainText = stripHtml(text); // Remove HTML tags
+        return plainText.length > maxLength ? plainText.substring(0, maxLength) + "..." : plainText;
     };
 
     if (error) {
@@ -54,7 +60,7 @@ export default function Dashboard() {
         <div className="p-6 max-w-6xl mx-auto bg-white rounded-lg shadow-lg">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-semibold text-gray-700">News Dashboard</h2>
-                <Link to="news/add" className="btn btn-primary">Add News</Link>
+                <Link to="news/add" className="btn bg-blue-600 hover:bg-blue-700 text-white transition">Add News</Link>
             </div>
 
             <div className="overflow-x-auto">
@@ -82,11 +88,11 @@ export default function Dashboard() {
                             <tr key={item.id} className="border-b hover:bg-gray-100">
                                 <td className="py-2 px-4 max-w-[150px] truncate hover:overflow-visible"
                                     title={item.title}>
-                                    {limitText(item.title, 30)}
+                                    {truncateText(item.title, 30)}
                                 </td>
                                 <td className="py-2 px-4 max-w-[200px] truncate hover:overflow-visible"
                                     title={item.description}>
-                                    {limitText(item.description, 50)}
+                                    {truncateText(item.description, 50)}
                                 </td>
                                 <td className="py-2 px-4">{item.category}</td>
                                 <td className="py-2 px-4">

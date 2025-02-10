@@ -1,32 +1,43 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { fetchNewsById, editeNews } from "../../api/news.js";
+import { fetchNewsById, editNews } from "../../api/news.js";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 export default function EditNews() {
     const navigate = useNavigate();
-    const { id } = useParams(); // Assuming you're using React Router params to get the ID
+    const { id } = useParams();
     const [newsData, setNewsData] = useState(null);
     const [image, setImage] = useState(null);
-    const [errors, setErrors] = useState(null);
+    const [errors, setErrors] = useState({});
+    const [description, setDescription] = useState( "");
     const [successMessage, setSuccessMessage] = useState(null);
 
     useEffect(() => {
-        // Fetch existing news data by ID
         const loadData = async () => {
             try {
                 const data = await fetchNewsById(id);
                 if (data.errors) {
                     setErrors(data.errors);
                 } else {
-                    setNewsData(data.data[0]); // Since the response is wrapped in a "data" array
+                    setNewsData(data.data[0]);
+                    setDescription(data.data[0].description);
                 }
             } catch (error) {
-                setErrors([{ message: "Error loading news data" }]);
+                setErrors({ general: "Error loading news data" });
             }
         };
 
         loadData();
-    }, [id]); // Fetch data when the component mounts
+    }, [id]);
+
+    useEffect(() => {
+        if (successMessage) {
+            setTimeout(() => {
+                navigate("/admin");
+            }, 2000);
+        }
+    }, [successMessage, navigate]);
 
     const handleImageChange = (e) => {
         setImage(e.target.files[0]);
@@ -34,52 +45,55 @@ export default function EditNews() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setErrors(null);
+        setErrors({});
         setSuccessMessage(null);
 
         const formData = new FormData();
         formData.append("title", e.target.title.value);
-        formData.append("description", e.target.description.value);
+        formData.append("description", description);
         formData.append("category", e.target.category.value);
         formData.set("is_active", e.target.is_active.checked ? "true" : "false");
 
         if (image) {
-            formData.append("image", image);  // Append the image file if selected
+            formData.append("image", image);
         }
 
         try {
-            const response = await editeNews(id, formData); // Send the FormData object
+            const response = await editNews(id, formData);
             if (response.errors) {
                 setErrors(response.errors);
             } else {
                 setSuccessMessage("News updated successfully!");
-                setTimeout(() => navigate("/admin"), 2000); // Redirect after success
             }
         } catch (error) {
-            setErrors([{ message: "Something went wrong. Please try again." }]);
+            setErrors({ general: "Something went wrong. Please try again." });
         }
     };
 
-
     if (!newsData) {
-        return <div>Loading...</div>; // Show loading state while data is being fetched
+        return <div className="text-center text-gray-600">Loading...</div>;
     }
 
     return (
-        <div className="p-6 max-w-4xl mx-auto bg-white rounded-lg shadow-lg">
+        <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
             <h2 className="text-3xl font-bold text-center text-blue-600 mb-6">Edit News</h2>
 
+            {/* Success Message */}
             {successMessage && (
-                <div className="text-green-500 text-center mb-4">{successMessage}</div>
-            )}
-
-            {errors && (
-                <div className="text-red-500 text-center mb-4">
-                    {errors[0]?.message || "An error occurred"}
+                <div className="bg-green-100 text-green-700 border border-green-500 px-4 py-2 rounded-md text-center mb-4">
+                    {successMessage}
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} encType="multipart/form-data" className="space-y-4">
+            {/* Error Messages */}
+            {Object.keys(errors).length > 0 && (
+                <div className="bg-red-100 text-red-700 border border-red-500 px-4 py-2 rounded-md text-center mb-4">
+                    {errors.general || errors.title?.[0] || errors.description?.[0] || errors.category?.[0] || errors.image?.[0]}
+                </div>
+            )}
+
+            <form onSubmit={handleSubmit} encType="multipart/form-data" className="space-y-6">
+                {/* Title */}
                 <div>
                     <label htmlFor="title" className="block text-sm font-semibold text-gray-700">Title</label>
                     <input
@@ -92,18 +106,22 @@ export default function EditNews() {
                     />
                 </div>
 
+                {/* Description */}
                 <div>
                     <label htmlFor="description"
                            className="block text-sm font-semibold text-gray-700">Description</label>
-                    <textarea
+                    <ReactQuill
+                        theme="snow"
                         id="description"
                         name="description"
-                        defaultValue={newsData.description}
+                        value={description}
+                        onChange={setDescription}
                         required
                         className="w-full px-4 py-2 border rounded-md bg-white text-gray-800 focus:ring-2 focus:ring-yellow-400"
                     />
                 </div>
 
+                {/* Category */}
                 <div>
                     <label htmlFor="category" className="block text-sm font-semibold text-gray-700">Category</label>
                     <input
@@ -116,19 +134,19 @@ export default function EditNews() {
                     />
                 </div>
 
+                {/* Image Upload & Preview */}
                 <div className="flex items-center space-x-6">
-                    {/* Image Preview (left side of file input) */}
                     <div className="w-1/4 flex justify-center">
                         {image ? (
                             <img
-                                src={URL.createObjectURL(image)} // Temporary URL for preview
+                                src={URL.createObjectURL(image)}
                                 alt="Preview"
                                 className="max-w-full h-32 object-cover rounded-md border border-gray-300"
                             />
                         ) : (
                             newsData.image && (
                                 <img
-                                    src={newsData.image} // Show the existing image if no new image is selected
+                                    src={newsData.image}
                                     alt="Current"
                                     className="max-w-full h-32 object-cover rounded-md border border-gray-300"
                                 />
@@ -136,11 +154,8 @@ export default function EditNews() {
                         )}
                     </div>
 
-                    {/* File Input (right side of image preview) */}
-                    <div className="w-3/4">
-                        <label htmlFor="image" className="block text-sm font-semibold text-gray-700 mb-2">
-                            Image
-                        </label>
+                    <div className="flex-1">
+                        <label htmlFor="image" className="block text-sm font-semibold text-gray-700">Change Image</label>
                         <input
                             type="file"
                             id="image"
@@ -151,25 +166,27 @@ export default function EditNews() {
                         />
                     </div>
                 </div>
-                {/* Is Active Checkbox */}
-                <div className="form-control flex items-start">
+
+                {/* Active Checkbox */}
+                <div className="form-control flex items-center">
                     <label className="cursor-pointer label">
-                        <span className="label-text">Active</span>
+                        <span className="label-text mr-2 text-gray-700">Active</span>
                         <input
                             id="is_active"
                             name="is_active"
                             type="checkbox"
-                            checked={newsData?.is_active || false} // Avoids undefined errors
-                            onChange={(e) => setNewsData({...newsData, is_active: e.target.checked})}
-                            className="checkbox checkbox-primary"/>
+                            defaultChecked={newsData.is_active}
+                            className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-yellow-400"
+                        />
                     </label>
                 </div>
 
+                {/* Submit Button */}
                 <button
                     type="submit"
-                    className="w-full bg-yellow-400 text-blue-600 font-semibold py-2 rounded-md hover:bg-yellow-300"
+                    className="w-full bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-500 transition duration-300"
                 >
-                    Save Changes
+                    Update News
                 </button>
             </form>
         </div>
