@@ -29,7 +29,8 @@ def create_app():
     :raises ValueError: If FLASK_ENV environment variable is not valid
     """
     app = Flask(__name__)
-    CORS(app, supports_credentials=True, origins="*")
+    frontend_url = os.environ.get("FRONTEND_URL")
+    CORS(app, supports_credentials=True, origins=frontend_url)
 
     # Load environment-specific configuration
     env = os.getenv("FLASK_ENV")
