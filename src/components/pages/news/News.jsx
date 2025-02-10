@@ -71,9 +71,6 @@ export default function News() {
                 <div className="text-center py-16">
                     <h2 className="text-2xl font-bold text-gray-600">No News Available</h2>
                     <p className="text-gray-500 mt-2">Check back later for updates.</p>
-                    <Link to="/news/add" className="btn btn-primary mt-5">
-                        Add News
-                    </Link>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
