@@ -92,8 +92,8 @@ def login():
         add_token_to_database(refresh_token)
         # Set HTTP-only cookies
         response = make_response(jsonify({"message": "Login successful"}), 200)
-        response.set_cookie("access_token", access_token, httponly=True, secure=False, samesite="Lax")
-        response.set_cookie("refresh_token", refresh_token, httponly=True, secure=False, samesite="Lax")
+        response.set_cookie("access_token", access_token, httponly=True, secure=True, samesite="Lax")
+        response.set_cookie("refresh_token", refresh_token, httponly=True, secure=True, samesite="Lax")
         return response
     except ValidationError as err:
         return jsonify({"errors": err.messages}), 400
