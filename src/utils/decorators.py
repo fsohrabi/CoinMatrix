@@ -14,3 +14,15 @@ def admin_required(fn):
         return fn(*args, **kwargs)
 
     return wrapper
+
+
+def user_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        user_id = get_jwt_identity()
+        user = User.query.get(user_id)
+        if not user or user.has_role("admin"):
+            return jsonify({"message": "User access required"}), 403
+        return fn(*args, **kwargs)
+
+    return wrapper

@@ -17,6 +17,7 @@ class UserSchema(Schema):
         if User.query.filter_by(email=data.get("email")).count():
             raise ValidationError({"email": ["Your email  already exists."]})
 
+
 class UserCreateSchema(UserSchema):
     """Schema for creating a new user, including password validation."""
     password = fields.String(

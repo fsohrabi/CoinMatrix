@@ -62,5 +62,7 @@ def create_app():
     app.register_blueprint(admin_blueprint)
     from src.routes.main import main_blueprint
     app.register_blueprint(main_blueprint)
+    from src.routes.user import user_blueprint
+    app.register_blueprint(user_blueprint)
 
     return app

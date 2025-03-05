@@ -18,14 +18,13 @@ from flask import request, jsonify, Blueprint, current_app, make_response
 from marshmallow import ValidationError
 
 from src.models.users import User
-from src.routes.helpers import add_token_to_database, revoke_token, is_token_revoked
+from src.utils.helpers import add_token_to_database, revoke_token, is_token_revoked
 from src.schemas.user import UserCreateSchema
 from jwt.exceptions import InvalidTokenError
 from flask_jwt_extended import (
-    JWTManager, jwt_required, create_access_token,
+    jwt_required, create_access_token,
     create_refresh_token, get_jwt,
-    get_jwt_identity, set_access_cookies,
-    set_refresh_cookies, unset_jwt_cookies
+    get_jwt_identity, unset_jwt_cookies
 )
 
 from src import db, jwt

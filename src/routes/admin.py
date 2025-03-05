@@ -5,7 +5,7 @@ from sqlalchemy.exc import NoResultFound
 
 from src import db
 from src.models import Tip
-from src.routes.decorators import admin_required
+from src.utils.decorators import admin_required
 from src.schemas.tip import TipSchema
 from src.utils.handle_image_upload import handle_image_upload
 
