@@ -73,7 +73,7 @@ def watchlist():
     return jsonify(transformed_data), 200
 
 
-def is_duplicate_entry(user_id, coin_id):
+def find_watchlist(user_id, coin_id):
     """
     Checks if an entry already exists in the watchlist for the given user and coin.
     """
@@ -115,7 +115,7 @@ def add_watchlist():
     coin_id = validated_data.get("coin_id")
 
     # Check for duplicate entry
-    if is_duplicate_entry(user_id, coin_id):
+    if find_watchlist(user_id, coin_id):
         logger.warning(f"Duplicate entry detected: user_id={user_id}, coin_id={coin_id}")
         return jsonify({"message": "Crypto is already in the watchlist"}), 400
 
@@ -124,3 +124,15 @@ def add_watchlist():
         return jsonify({"message": "Crypto added to watchlist successfully"}), 201
     else:
         return jsonify({"message": "Failed to add crypto to watchlist"}), 500
+
+
+@user_blueprint.route("/watchlist", methods=["DELETE"])
+@jwt_required()
+@user_required
+def delete_watchlist(coin_id):
+    user_id = get_jwt_identity()
+    watchlist = find_watchlist(user_id, coin_id)
+    if watchlist:
+        db.session.delete(watchlist)
+        db.session.commit()
+        return jsonify({'message': 'Coin  deleted successfully from watchlist'}), 200
