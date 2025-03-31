@@ -30,7 +30,8 @@ def home():
     cached_data = cache.get(cache_key)
     if not cached_data:
         # Fetch data from CoinMarketCap API
-        headers = {'Accepts': 'application/json', "X-CMC_PRO_API_KEY": COIN_API_KEY}
+        headers = {'Accepts': 'application/json',
+                   "X-CMC_PRO_API_KEY": COIN_API_KEY}
         response = requests.get(f"{COIN_API_BASE_URL}/v1/cryptocurrency/listings/latest", headers=headers,
                                 params=parameters)
 
@@ -45,7 +46,8 @@ def home():
         cryptocurrencies = api_data.get("data", [])
         total_count = api_data.get("status", {}).get("total_count", 0)
 
-        cache.set(cache_key, {"data": cryptocurrencies, "total_count": total_count}, timeout=60)
+        cache.set(cache_key, {"data": cryptocurrencies,
+                  "total_count": total_count}, timeout=60)
     else:
         cryptocurrencies = cached_data.get("data", [])
         total_count = cached_data.get("total_count", 0)
@@ -95,7 +97,8 @@ def tips():
     try:
         page = int(request.args.get('page', 1))
         limit = int(request.args.get('limit', 20))
-        pagination = Tip.query.filter_by(is_active=True).paginate(page=page, per_page=limit, error_out=False)
+        pagination = Tip.query.filter_by(is_active=True).paginate(
+            page=page, per_page=limit, error_out=False)
 
         tips_data = pagination.items
 
@@ -153,3 +156,48 @@ def show_tip(tip_id):
         return jsonify({"error": str(e)}), 500
 
 
+@main_blueprint.route('/search', methods=['GET'])
+def search_cryptocurrencies():
+    """
+    Search cryptocurrencies by name or symbol
+    """
+    query = request.args.get('q', '').lower()
+    if not query:
+        return jsonify({"error": "Search query is required"}), 400
+
+    # Try to get from cache first
+    cache_key = f"search_{query}"
+    cached_data = cache.get(cache_key)
+    if cached_data:
+        return jsonify(cached_data)
+
+    # Fetch data from CoinMarketCap API
+    headers = {'Accepts': 'application/json',
+               "X-CMC_PRO_API_KEY": COIN_API_KEY}
+    response = requests.get(f"{COIN_API_BASE_URL}/v1/cryptocurrency/listings/latest",
+                            headers=headers,
+                            params={'limit': 5000, 'convert': 'USD'})
+
+    if response.status_code != 200:
+        return jsonify({
+            "error": "Failed to fetch data from CoinMarketCap API",
+            "status_code": response.status_code,
+            "message": response.json().get("status", {}).get("error_message", "Unknown error")
+        }), 500
+
+    api_data = response.json()
+    cryptocurrencies = api_data.get("data", [])
+
+    # Filter cryptocurrencies based on search query
+    filtered_cryptos = [
+        crypto for crypto in cryptocurrencies
+        if query in crypto['name'].lower() or query in crypto['symbol'].lower()
+    ]
+
+    # Transform the filtered data
+    transformed_data = transform_data(filtered_cryptos)
+
+    # Cache the results for 5 minutes
+    cache.set(cache_key, transformed_data, timeout=300)
+
+    return jsonify(transformed_data)

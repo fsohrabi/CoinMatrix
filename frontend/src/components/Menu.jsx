@@ -1,83 +1,137 @@
-import { NavLink } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
+import { useTheme } from "./contexts/ThemeContext";
+import { FaHome, FaChartLine, FaNewspaper, FaInfoCircle, FaUser, FaSignInAlt, FaBars, FaTimes, FaMoon, FaSun, FaUserPlus, FaCog } from "react-icons/fa";
+import { useState } from "react";
 
-const MenuItem = ({ to, icon, label,admin=false }) => {
-    const setActive = ({ isActive }) =>`w-full flex items-center justify-between text-left px-3 py-2 my-1
-    ${isActive ? "text-blue-600 text-lg font-bold" : "text-yellow-400 text-base font-normal"}
-    hover:text-blue-600 hover:scale-105 transition-all duration-300 ease-in-out
-    bg-transparent focus:bg-transparent focus:text-blue-600 active:bg-transparent focus:outline-none`;
+const MenuItem = ({ to, icon: Icon, children, isActive }) => (
+    <Link
+        to={to}
+        className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors duration-200 ${isActive
+            ? "bg-yellow-500 text-white"
+            : "text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-gray-700"
+            }`}
+    >
+        <Icon className="text-xl" />
+        <span>{children}</span>
+    </Link>
+);
 
-
+const ThemeToggle = () => {
+    const { isDarkMode, toggleTheme } = useTheme();
     return (
-        <li>
-            <NavLink to={to} className={setActive}>
-                {({ isActive }) => (
-                    <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center">
-                            {icon && (
-                                <svg
-                                    role="img"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    height="1.5em"
-                                    width="1.5em"
-                                    className="mr-2"
-                                >
-                                    {/* Directly use the path string as a prop */}
-                                    <path fill="currentColor" d={icon} />
-                                </svg>
-                            )}
-                            {label}
-                        </div>
-                        {(isActive && !admin) && <span className="text-blue-600 ml-2 text-xl">&gt;</span>}
-                    </div>
-                )}
-            </NavLink>
-        </li>
+        <button
+            onClick={toggleTheme}
+            className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition-colors duration-200"
+        >
+            {isDarkMode ? (
+                <>
+                    <FaSun className="text-xl" />
+                    <span>Light Mode</span>
+                </>
+            ) : (
+                <>
+                    <FaMoon className="text-xl" />
+                    <span>Dark Mode</span>
+                </>
+            )}
+        </button>
     );
 };
 
-
 export default function Menu() {
+    const location = useLocation();
     const { user } = useAuth();
+    const { isDarkMode } = useTheme();
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    let menuItems = [
-        {
-            to: "/",
-            icon: "M4 11h6a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1m0 10h6a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1m10 0h6a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1m7.293-14.707l-3.586-3.586a.999.999 0 0 0-1.414 0l-3.586 3.586a.999.999 0 0 0 0 1.414l3.586 3.586a.999.999 0 0 0 1.414 0l3.586-3.586a.999.999 0 0 0 0-1.414",
-            label: "Dashboard",
-
-        },
-        {
-            to: "/news",
-            icon: "M2 4a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1zm2 1v14h16V5zm2 2h6v6H6zm2 2v2h2V9zm6 0h4V7h-4zm4 4h-4v-2h4zM6 15v2h12v-2z",
-            label: "News",
-        },
-        {
-            to: "/about",
-            icon: "M15 4H5v16h14V8h-4zM3 2.992C3 2.444 3.447 2 3.999 2H16l5 5v13.993A1 1 0 0 1 20.007 22H3.993A1 1 0 0 1 3 21.008zM11 11h2v6h-2zm0-4h2v2h-2z",
-            label: "About",
-        },
+    const adminMenuItems = [
+        { to: "/admin", icon: FaCog, label: "Dashboard" },
     ];
 
-    if (user?.admin) {
-        menuItems = [
-            {
-                to: "admin",
-                icon: "M4 11h6a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1m0 10h6a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1m10 0h6a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1m7.293-14.707l-3.586-3.586a.999.999 0 0 0-1.414 0l-3.586 3.586a.999.999 0 0 0 0 1.414l3.586 3.586a.999.999 0 0 0 1.414 0l3.586-3.586a.999.999 0 0 0 0-1.414",
-                label: "Dashboard",
-                admin: true,
-            },
-        ];
-    }
+    const userMenuItems = [
+        { to: "/", icon: FaHome, label: "Home" },
+        { to: "/news", icon: FaNewspaper, label: "News" },
+        { to: "/about", icon: FaInfoCircle, label: "About" },
+        { to: "/profile", icon: FaUser, label: "Profile" },
+    ];
+
+    const guestMenuItems = [
+        { to: "/", icon: FaHome, label: "Home" },
+        { to: "/news", icon: FaNewspaper, label: "News" },
+        { to: "/about", icon: FaInfoCircle, label: "About" },
+        { to: "/login", icon: FaSignInAlt, label: "Login" },
+        { to: "/register", icon: FaUserPlus, label: "Register" },
+    ];
+
+    const menuItems = user?.admin ? adminMenuItems : user ? userMenuItems : guestMenuItems;
 
     return (
-        <ul className="menu w-full ">
-            {menuItems.map((item) =>
-                item.show !== false ? ( // Check for explicit false, not just falsy
-                    <MenuItem key={item.to} to={item.to} icon={item.icon} label={item.label} admin={item.admin} />
-                ) : null
+        <>
+            {/* Mobile Menu Button */}
+            <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="fixed top-4 right-4 z-[55] p-2 rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 transition-colors duration-200 md:hidden"
+            >
+                {isMobileMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+            </button>
+
+            {/* Mobile Menu Background */}
+            {isMobileMenuOpen && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 z-[60] md:hidden"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                />
             )}
-        </ul>
+
+            {/* Mobile Menu */}
+            <div
+                className={`fixed top-0 right-0 h-full w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out z-[65] md:hidden ${isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
+                    }`}
+            >
+                <div className="p-4">
+                    <div className="flex justify-end mb-4">
+                        <button
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                        >
+                            <FaTimes size={24} className="text-gray-600 dark:text-gray-300" />
+                        </button>
+                    </div>
+                    <nav className="space-y-2">
+                        {menuItems.map((item) => (
+                            <MenuItem
+                                key={item.to}
+                                to={item.to}
+                                icon={item.icon}
+                                isActive={location.pathname === item.to}
+                            >
+                                {item.label}
+                            </MenuItem>
+                        ))}
+                        <ThemeToggle />
+                    </nav>
+                </div>
+            </div>
+
+            {/* Desktop Menu */}
+            <nav className="hidden md:block w-64 bg-white dark:bg-gray-800 shadow-lg relative z-40">
+                <div className="p-4">
+                    <div className="space-y-2">
+                        {menuItems.map((item) => (
+                            <MenuItem
+                                key={item.to}
+                                to={item.to}
+                                icon={item.icon}
+                                isActive={location.pathname === item.to}
+                            >
+                                {item.label}
+                            </MenuItem>
+                        ))}
+                        <ThemeToggle />
+                    </div>
+                </div>
+            </nav>
+        </>
     );
 }
