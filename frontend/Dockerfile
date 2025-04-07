@@ -17,6 +17,7 @@ COPY frontend/ .
 # Build the app
 RUN npm run build
 
+
 EXPOSE 3000
 
 # Run the production server

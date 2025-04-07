@@ -29,7 +29,8 @@ def fetch_coinmarketcap_data(coin_ids):
     """
     try:
         parameters = {'id': coin_ids}
-        headers = {'Accepts': 'application/json', "X-CMC_PRO_API_KEY": COIN_API_KEY}
+        headers = {'Accepts': 'application/json',
+                   "X-CMC_PRO_API_KEY": COIN_API_KEY}
         response = requests.get(f"{COIN_API_BASE_URL}/v1/cryptocurrency/quotes/latest", headers=headers,
                                 params=parameters)
         response.raise_for_status()  # Raise an exception for HTTP errors
@@ -88,7 +89,8 @@ def add_to_watchlist(user_id, coin_id):
         watchlist_entry = Watchlist(user_id=user_id, coin_id=coin_id)
         db.session.add(watchlist_entry)
         db.session.commit()
-        logger.info(f"New watchlist entry added: user_id={user_id}, coin_id={coin_id}")
+        logger.info(
+            f"New watchlist entry added: user_id={user_id}, coin_id={coin_id}")
         return True
     except IntegrityError as e:
         db.session.rollback()
@@ -116,7 +118,8 @@ def add_watchlist():
 
     # Check for duplicate entry
     if find_watchlist(user_id, coin_id):
-        logger.warning(f"Duplicate entry detected: user_id={user_id}, coin_id={coin_id}")
+        logger.warning(
+            f"Duplicate entry detected: user_id={user_id}, coin_id={coin_id}")
         return jsonify({"message": "Crypto is already in the watchlist"}), 400
 
     # Add to watchlist
@@ -126,12 +129,13 @@ def add_watchlist():
         return jsonify({"message": "Failed to add crypto to watchlist"}), 500
 
 
-@user_blueprint.route("/watchlist", methods=["DELETE"])
+@user_blueprint.route("/watchlist/<int:coin_id>", methods=["DELETE"])
 @jwt_required()
 @user_required
 def delete_watchlist(coin_id):
     user_id = get_jwt_identity()
-    watchlist = find_watchlist(user_id, coin_id)
+    watchlist = Watchlist.query.filter_by(
+        user_id=user_id, coin_id=coin_id).first()
     if watchlist:
         db.session.delete(watchlist)
         db.session.commit()

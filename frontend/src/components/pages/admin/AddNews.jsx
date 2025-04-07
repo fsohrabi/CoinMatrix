@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Form } from "react-router-dom";
 import { addNews } from "../../api/news.js";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import { Editor } from '@tinymce/tinymce-react';
+import { useQueryClient } from '@tanstack/react-query';
+
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { FaArrowLeft } from 'react-icons/fa';
@@ -16,14 +17,19 @@ export default function AddNews() {
     const [errors, setErrors] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
     const [description, setDescription] = useState("");
+    const queryClient = useQueryClient();
 
     if (!user?.admin) {
         navigate("/");
         return null;
     }
 
+
     const handleImageChange = (e) => {
         setImage(e.target.files[0]);
+    };
+    const handleEditorChange = (content, editor) => {
+        setDescription(content);
     };
 
     const handleSubmit = async (e) => {
@@ -49,6 +55,7 @@ export default function AddNews() {
             }
 
             setSuccessMessage("News created successfully!");
+            await queryClient.invalidateQueries(["news"]);
             setTimeout(() => navigate("/admin"), 2000);
         } catch (error) {
             setErrors({ general: "Something went wrong. Please try again." });
@@ -113,195 +120,27 @@ export default function AddNews() {
                             <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                                 Description
                             </label>
-                            <div className={`mt-1 ${isDarkMode ? 'bg-gray-700' : 'bg-white'}`}>
-                                <ReactQuill
-                                    theme="snow"
-                                    value={description}
-                                    onChange={setDescription}
-                                    required
-                                    className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}
-                                    modules={{
-                                        toolbar: [
-                                            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-                                            ['bold', 'italic', 'underline', 'strike'],
-                                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                                            ['link', 'image'],
-                                            ['clean']
-                                        ]
-                                    }}
-                                    formats={[
-                                        'header',
-                                        'bold', 'italic', 'underline', 'strike',
-                                        'list', 'bullet',
-                                        'link', 'image'
-                                    ]}
-                                />
-                                <style>
-                                    {`
-                                        .ql-toolbar.ql-snow {
-                                            ${isDarkMode ? `
-                                                background-color: #1F2937;
-                                                border-color: #4B5563;
-                                                color: #E5E7EB;
-                                            ` : `
-                                                background-color: #F9FAFB;
-                                                border-color: #E5E7EB;
-                                                color: #111827;
-                                            `}
-                                        }
-                                        .ql-container.ql-snow {
-                                            ${isDarkMode ? `
-                                                background-color: #374151;
-                                                border-color: #4B5563;
-                                                color: #E5E7EB;
-                                            ` : `
-                                                background-color: #FFFFFF;
-                                                border-color: #E5E7EB;
-                                                color: #111827;
-                                            `}
-                                        }
-                                        .ql-editor {
-                                            ${isDarkMode ? `
-                                                color: #E5E7EB;
-                                                min-height: 200px;
-                                            ` : `
-                                                color: #111827;
-                                                min-height: 200px;
-                                            `}
-                                        }
-                                        .ql-stroke {
-                                            ${isDarkMode ? `
-                                                stroke: #E5E7EB !important;
-                                            ` : `
-                                                stroke: #111827 !important;
-                                            `}
-                                        }
-                                        .ql-fill {
-                                            ${isDarkMode ? `
-                                                fill: #E5E7EB !important;
-                                            ` : `
-                                                fill: #111827 !important;
-                                            `}
-                                        }
-                                        .ql-picker {
-                                            ${isDarkMode ? `
-                                                color: #E5E7EB !important;
-                                            ` : `
-                                                color: #111827 !important;
-                                            `}
-                                        }
-                                        .ql-picker-options {
-                                            ${isDarkMode ? `
-                                                background-color: #1F2937 !important;
-                                                color: #E5E7EB !important;
-                                                border-color: #4B5563 !important;
-                                            ` : `
-                                                background-color: #FFFFFF !important;
-                                                color: #111827 !important;
-                                                border-color: #E5E7EB !important;
-                                            `}
-                                        }
-                                        .ql-snow .ql-picker.ql-expanded .ql-picker-options {
-                                            ${isDarkMode ? `
-                                                border-color: #4B5563 !important;
-                                            ` : `
-                                                border-color: #E5E7EB !important;
-                                            `}
-                                        }
-                                        .ql-snow .ql-tooltip {
-                                            ${isDarkMode ? `
-                                                background-color: #1F2937 !important;
-                                                color: #E5E7EB !important;
-                                                border-color: #4B5563 !important;
-                                            ` : `
-                                                background-color: #FFFFFF !important;
-                                                color: #111827 !important;
-                                                border-color: #E5E7EB !important;
-                                            `}
-                                        }
-                                        .ql-snow .ql-tooltip input[type=text] {
-                                            ${isDarkMode ? `
-                                                background-color: #374151 !important;
-                                                color: #E5E7EB !important;
-                                                border-color: #4B5563 !important;
-                                            ` : `
-                                                background-color: #FFFFFF !important;
-                                                color: #111827 !important;
-                                                border-color: #E5E7EB !important;
-                                            `}
-                                        }
-                                        .ql-snow .ql-picker.ql-expanded .ql-picker-label {
-                                            ${isDarkMode ? `
-                                                border-color: #4B5563 !important;
-                                            ` : `
-                                                border-color: #E5E7EB !important;
-                                            `}
-                                        }
-                                        .ql-toolbar.ql-snow .ql-picker.ql-expanded .ql-picker-options {
-                                            ${isDarkMode ? `
-                                                border-color: #4B5563 !important;
-                                            ` : `
-                                                border-color: #E5E7EB !important;
-                                            `}
-                                        }
-                                        .ql-snow .ql-tooltip a {
-                                            ${isDarkMode ? `
-                                                color: #60A5FA !important;
-                                            ` : `
-                                                color: #2563EB !important;
-                                            `}
-                                        }
-                                        .ql-snow.ql-toolbar button:hover,
-                                        .ql-snow .ql-toolbar button:hover,
-                                        .ql-snow.ql-toolbar button:focus,
-                                        .ql-snow .ql-toolbar button:focus,
-                                        .ql-snow.ql-toolbar button.ql-active,
-                                        .ql-snow .ql-toolbar button.ql-active,
-                                        .ql-snow.ql-toolbar .ql-picker-label:hover,
-                                        .ql-snow .ql-toolbar .ql-picker-label:hover,
-                                        .ql-snow.ql-toolbar .ql-picker-label.ql-active,
-                                        .ql-snow .ql-toolbar .ql-picker-label.ql-active,
-                                        .ql-snow.ql-toolbar .ql-picker-item:hover,
-                                        .ql-snow .ql-toolbar .ql-picker-item:hover,
-                                        .ql-snow.ql-toolbar .ql-picker-item.ql-selected,
-                                        .ql-snow .ql-toolbar .ql-picker-item.ql-selected {
-                                            ${isDarkMode ? `
-                                                color: #60A5FA !important;
-                                            ` : `
-                                                color: #2563EB !important;
-                                            `}
-                                        }
-                                        .ql-snow.ql-toolbar button:hover .ql-stroke,
-                                        .ql-snow .ql-toolbar button:hover .ql-stroke,
-                                        .ql-snow.ql-toolbar button:focus .ql-stroke,
-                                        .ql-snow .ql-toolbar button:focus .ql-stroke,
-                                        .ql-snow.ql-toolbar button.ql-active .ql-stroke,
-                                        .ql-snow .ql-toolbar button.ql-active .ql-stroke,
-                                        .ql-snow.ql-toolbar .ql-picker-label:hover .ql-stroke,
-                                        .ql-snow .ql-toolbar .ql-picker-label:hover .ql-stroke {
-                                            ${isDarkMode ? `
-                                                stroke: #60A5FA !important;
-                                            ` : `
-                                                stroke: #2563EB !important;
-                                            `}
-                                        }
-                                        .ql-snow.ql-toolbar button:hover .ql-fill,
-                                        .ql-snow .ql-toolbar button:hover .ql-fill,
-                                        .ql-snow.ql-toolbar button:focus .ql-fill,
-                                        .ql-snow .ql-toolbar button:focus .ql-fill,
-                                        .ql-snow.ql-toolbar button.ql-active .ql-fill,
-                                        .ql-snow .ql-toolbar button.ql-active .ql-fill,
-                                        .ql-snow.ql-toolbar .ql-picker-label:hover .ql-fill,
-                                        .ql-snow .ql-toolbar .ql-picker-label:hover .ql-fill {
-                                            ${isDarkMode ? `
-                                                fill: #60A5FA !important;
-                                            ` : `
-                                                fill: #2563EB !important;
-                                            `}
-                                        }
-                                    `}
-                                </style>
-                            </div>
+                            <Editor
+                                apiKey={import.meta.env.VITE_TINYMCE_API_KEY}
+                                value={description}
+                                onEditorChange={handleEditorChange}
+                                init={{
+                                    height: 400,
+                                    menubar: false,
+                                    plugins: [
+                                        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                                        'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                                        'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
+                                    ],
+                                    toolbar: 'undo redo | blocks | ' +
+                                        'bold italic backcolor | alignleft aligncenter ' +
+                                        'alignright alignjustify | bullist numlist outdent indent | ' +
+                                        'removeformat | help',
+                                    content_style: isDarkMode ?
+                                        'body { font-family:Helvetica,Arial,sans-serif; font-size:14px; background-color: #1f2937; color: white; }' :
+                                        'body { font-family:Helvetica,Arial,sans-serif; font-size:14px; }'
+                                }}
+                            />
                         </div>
 
                         <div>

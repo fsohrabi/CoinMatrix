@@ -7,7 +7,7 @@ export default function GuestRoute() {
     if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>;
 
     if (user) {
-        return user.admin ? <Navigate to="/admin" replace /> : <Navigate to="/" replace />;
+        return user.admin ? <Navigate to="/admin" replace /> : <Navigate to="/user" replace />;
     }
 
     return <Outlet />;

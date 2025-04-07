@@ -159,14 +159,18 @@ def show_tip(tip_id):
 @main_blueprint.route('/search', methods=['GET'])
 def search_cryptocurrencies():
     """
-    Search cryptocurrencies by name or symbol
+    Search cryptocurrencies by name, symbol, or slug with pagination.
     """
     query = request.args.get('q', '').lower()
+    page = int(request.args.get('page', 1))
+    limit = int(request.args.get('limit', 20))
+    start = (page - 1) * limit
+
     if not query:
         return jsonify({"error": "Search query is required"}), 400
 
     # Try to get from cache first
-    cache_key = f"search_{query}"
+    cache_key = f"search_{query}_page_{page}_limit_{limit}"
     cached_data = cache.get(cache_key)
     if cached_data:
         return jsonify(cached_data)
@@ -188,16 +192,32 @@ def search_cryptocurrencies():
     api_data = response.json()
     cryptocurrencies = api_data.get("data", [])
 
-    # Filter cryptocurrencies based on search query
+    # 🔹 Search by name, symbol, or slug
     filtered_cryptos = [
         crypto for crypto in cryptocurrencies
-        if query in crypto['name'].lower() or query in crypto['symbol'].lower()
+        if query in crypto['name'].lower() or query in crypto['symbol'].lower() or query in crypto['slug'].lower()
     ]
 
-    # Transform the filtered data
-    transformed_data = transform_data(filtered_cryptos)
+    # Pagination Logic
+    total_results = len(filtered_cryptos)
+    paginated_cryptos = filtered_cryptos[start:start + limit]
+
+    # Transform the filtered and paginated data
+    transformed_data = transform_data(paginated_cryptos)
 
     # Cache the results for 5 minutes
-    cache.set(cache_key, transformed_data, timeout=300)
+    cache.set(cache_key, {
+        "page": page,
+        "limit": limit,
+        "total_results": total_results,
+        "total_pages": (total_results // limit) + (1 if total_results % limit > 0 else 0),
+        "data": transformed_data
+    }, timeout=60)
 
-    return jsonify(transformed_data)
+    return jsonify({
+        "page": page,
+        "limit": limit,
+        "total_results": total_results,
+        "total": (total_results // limit) + (1 if total_results % limit > 0 else 0),
+        "data": transformed_data
+    })

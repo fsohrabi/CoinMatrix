@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import { useTheme } from "./contexts/ThemeContext";
-import { FaHome, FaChartLine, FaNewspaper, FaInfoCircle, FaUser, FaSignInAlt, FaBars, FaTimes, FaMoon, FaSun, FaUserPlus, FaCog } from "react-icons/fa";
+import { FaHome, FaChartLine, FaNewspaper, FaInfoCircle, FaUser, FaSignInAlt, FaBars, FaTimes, FaMoon, FaSun, FaUserPlus, FaCog, FaStar } from "react-icons/fa";
 import { useState } from "react";
 
 const MenuItem = ({ to, icon: Icon, children, isActive }) => (
@@ -50,10 +50,9 @@ export default function Menu() {
     ];
 
     const userMenuItems = [
-        { to: "/", icon: FaHome, label: "Home" },
+        { to: "/user", icon: FaHome, label: "Dashboard" },
         { to: "/news", icon: FaNewspaper, label: "News" },
         { to: "/about", icon: FaInfoCircle, label: "About" },
-        { to: "/profile", icon: FaUser, label: "Profile" },
     ];
 
     const guestMenuItems = [

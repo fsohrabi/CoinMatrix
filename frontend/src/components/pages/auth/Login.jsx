@@ -66,7 +66,11 @@ export default function Login() {
             }
 
             // Successful login
-            navigate("/");
+            if (response.admin) {
+                navigate("/admin");
+            } else {
+                navigate("/user");
+            }
         } catch (error) {
             console.error("Login error:", error);
             // Handle different types of errors
@@ -88,7 +92,7 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen flex items-center justify-center  sm:px-6 lg:px-8">
             <div className={`max-w-md w-full space-y-8 p-10 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
                 <div>
                     <h2 className={`mt-6 text-center text-3xl font-extrabold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>

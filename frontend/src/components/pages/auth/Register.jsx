@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { registerUser } from "../../api/auth.js";
 
 export default function Register() {
     const navigate = useNavigate();
-    const { handleRegister } = useAuth();
+
     const { isDarkMode } = useTheme();
     const [formData, setFormData] = useState({
         name: "",
@@ -67,16 +67,21 @@ export default function Register() {
 
         setIsLoading(true);
         try {
-            const response = await handleRegister(formData);
+            const { password_confirmation, ...dataToSend } = formData;
+            const response = await registerUser(dataToSend);
 
             // Check if response has errors array
-            if (response.errors && Array.isArray(response.errors)) {
-                setServerError(response.errors[0]); // Display the first error message
+            if (response.errors || response.password) {
+                setErrors({
+                    ...(response.errors || {}),
+                    ...(response.password && {
+                        password: Array.isArray(response.password) ? response.password.join(" ") : response.password,
+                    }),
+                });
                 return;
             }
-
             // Successful registration
-            navigate("/");
+            navigate("/login");
         } catch (error) {
             console.error("Registration error:", error);
             // Handle different types of errors
