@@ -31,10 +31,10 @@ export default function AboutPage() {
                     </h2>
                     <ul className={`space-y-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                         <li>• Real-time cryptocurrency prices</li>
-                        <li>• Market trends and analysis</li>
+
                         <li>• Portfolio tracking</li>
                         <li>• News updates</li>
-                        <li>• Price alerts</li>
+
                     </ul>
                 </div>
             </div>
