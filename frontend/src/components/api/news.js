@@ -1,30 +1,31 @@
 const apiUrl = import.meta.env.VITE_APP_API_URL;
-
-export const fetchAllNews= async (page = 1, limit = 20, is_active=true)=>{
-    try{
-        const url=is_active?apiUrl+"/tips":apiUrl+"/admin/tips"
-        const response = await fetch(`${url}?page=${page}&limit=${limit}`,
-            {credentials: "include"});
+import { fetchWithAuth } from './fetchWithAuth';
+export const fetchAllNews = async (page = 1, limit = 20, is_active = true) => {
+    try {
+        const url = is_active ? apiUrl + "/tips" : apiUrl + "/admin/tips"
+        const response = await fetchWithAuth(`${url}?page=${page}&limit=${limit}`, {
+            credentials: 'include',
+        });
         if (!response.ok) {
             const errorData = await response.json(); // Try to get error details from the server
             throw new Error(errorData.message || "Failed to fetch news"); // Throw error with message
         }
         return await response.json();
-    }catch(error){
+    } catch (error) {
         console.error("Error fetching news:", error);
         throw error;
     }
 
 }
-export const fetchNewsById = async (id)=>{
-    try{
+export const fetchNewsById = async (id) => {
+    try {
         const response = await fetch(`${apiUrl}/tips/${id}`);
         const data = await response.json();
         if (!response.ok) {
-            return { errors: data.errors } ;
+            return { errors: data.errors };
         }
         return data
-    }catch (error){
+    } catch (error) {
         console.error("Error fetching news by id:", error);
         throw error;
     }
@@ -32,10 +33,11 @@ export const fetchNewsById = async (id)=>{
 }
 export const addNews = async (formData) => {
     try {
-        const response = await fetch(`${apiUrl}/admin/create_tip`, {
+        const response = await fetchWithAuth(`${apiUrl}/admin/create_tip`, {
             method: "POST",
             body: formData,
-            credentials: "include",
+            credentials: 'include',
+
         });
 
         const responseData = await response.json();
@@ -52,39 +54,38 @@ export const addNews = async (formData) => {
     }
 };
 
-export const editNews = async (id,data)=>{
+export const editNews = async (id, data) => {
     try {
-        const response = await fetch(`${apiUrl}/admin/edit_tip/${id}`,{
+        const response = await fetchWithAuth(`${apiUrl}/admin/edit_tip/${id}`, {
             method: "PUT",
             body: data,
-            credentials: "include",
+            credentials: 'include',
+
         });
         const responseData = await response.json();
         if (!response.ok) {
-            return { errors: responseData.errors } ;
+            return { errors: responseData.errors };
         }
         return responseData
-    }catch (error) {
+    } catch (error) {
         console.error("Error editing news:", error);
         throw error;
     }
 }
 
-export  const deleteNews = async (id)=>{
-    try{
-        const response = await fetch(`${apiUrl}/admin/delete_tip/${id}`,{
+export const deleteNews = async (id) => {
+    try {
+        const response = await fetchWithAuth(`${apiUrl}/admin/delete_tip/${id}`, {
             method: "DELETE",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-            }
+            credentials: 'include',
+
         })
         const data = await response.json();
         if (!response.ok) {
-            return { errors: data.errors } ;
+            return { errors: data.errors };
         }
         return data
-    }catch(error){
+    } catch (error) {
         console.error("Error deleting news:", error);
         throw error;
     }

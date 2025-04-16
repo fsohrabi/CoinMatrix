@@ -1,56 +1,53 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { fetchCurrentUser, login, logout } from "../api/auth";
+import { login, logout, fetchCurrentUser } from "../api/auth";
+import Cookies from 'js-cookie';
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [hasAttemptedInitialAuth, setHasAttemptedInitialAuth] = useState(false); // New state
-
-    useEffect(() => {
-        const initializeUser = async () => {
-            try {
-                const data = await fetchCurrentUser();
-                setUser(data);
-            } catch (error) {
-                console.error("Error fetching user:", error);
-                setUser(null); // Explicitly set user to null on error
-            } finally {
-                setLoading(false); // Ensure loading stops
-                setHasAttemptedInitialAuth(true);
-            }
-        };
-
-        if (!hasAttemptedInitialAuth) {
-            initializeUser();
+    const [user, setUser] = useState(() => {
+        const storedUser = localStorage.getItem('user');
+        try {
+            return storedUser ? JSON.parse(storedUser) : null;
+        } catch (error) {
+            console.error("Failed to parse user from localStorage", error);
+            return null;
         }
-    }, [hasAttemptedInitialAuth]);
+    });
 
+
+    const [loading, setLoading] = useState(false);
 
     const handleLogin = async (userData) => {
-        const response = await login(userData);
-        if (response && response.errors) { // Check for errors property
-            return response; // Return the whole response with errors
+        setLoading(true);
+        try {
+            const response = await login(userData);
+            if (response.errors) return response;
+
+            // Store the full response including user data and tokens
+            localStorage.setItem('user', JSON.stringify(response.user));
+            setUser(response.user);
+            return response;
+        } finally {
+            setLoading(false);
         }
-        const data = await fetchCurrentUser();
-        setUser(data);
-        return data; // Return data on successful login
     };
+
 
     const handleLogout = async () => {
         await logout();
+        localStorage.removeItem('user');
+        Cookies.remove('access_token');
+        Cookies.remove('refresh_token');
         setUser(null);
     };
 
     return (
-        <AuthContext.Provider value={{ user, handleLogin, handleLogout ,loading: !user && !hasAttemptedInitialAuth}}>
+        <AuthContext.Provider value={{ user, handleLogin, handleLogout, loading }}>
             {children}
         </AuthContext.Provider>
     );
-
 };
 
 export default AuthProvider;
-
