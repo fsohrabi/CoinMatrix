@@ -68,34 +68,31 @@ def register():
 
 @auth_blueprint.route("/login", methods=["POST"])
 def login():
-    """
-    Authenticate a user and issue JWT access and refresh tokens.
-
-    Request Body (JSON):
-    - email (str): The user's email address.
-    - password (str): The user's password.
-
-    Returns:
-    - 200: Access and refresh tokens if authentication is successful.
-    - 400: Validation error messages if the input is invalid.
-    """
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request"}), 400
+
     schema = UserLoginSchema()
     try:
         data = schema.load(request.json)
         user = schema.validate_credentials(data)
+
         access_token = create_access_token(identity=user.id)
         refresh_token = create_refresh_token(identity=user.id)
+
         add_token_to_database(access_token)
         add_token_to_database(refresh_token)
-        # Set HTTP-only cookies
-        response = make_response(jsonify({"message": "Login successful"}), 200)
-        response.set_cookie("access_token", access_token, httponly=True, secure=True,
-                            samesite="None")  # Production
-        response.set_cookie("refresh_token", refresh_token, httponly=True, secure=True,
-                            samesite="None")  # Production
-        return response
+
+        return jsonify({
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "user": {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "admin": user.has_role("admin")
+            }
+        }), 200
+
     except ValidationError as err:
         return jsonify({"errors": err.messages}), 400
 
@@ -133,12 +130,6 @@ def logout():
 @auth_blueprint.route("/me", methods=["GET"])
 @jwt_required()
 def get_current_user():
-    """
-    Get the currently logged-in user's information.
-    """
-    token = request.cookies.get("access_token")
-    if not token:
-        return jsonify({"message": "Unauthorized"}), 401
 
     try:
         user_id = get_jwt_identity()
@@ -211,3 +202,8 @@ def check_if_token_revoked(jwt_header, jwt_payload):
     - bool: True if the token is revoked, False otherwise.
     """
     return is_token_revoked(jwt_payload)
+
+
+@jwt.expired_token_loader
+def expired_token_callback(jwt_header, jwt_payload):
+    return jsonify({"msg": "Token has expired"}), 401

@@ -55,7 +55,7 @@ def watchlist():
     watchlist_coins = get_user_watchlist(user_id)
 
     if not watchlist_coins:
-        return jsonify({"message": "Nothing found"}), 404
+        return jsonify([]), 200
 
     # Extract coin IDs
     coin_ids = ",".join(str(coin.coin_id) for coin in watchlist_coins)
