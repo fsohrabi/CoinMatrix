@@ -24,9 +24,11 @@ jobs:
             cd backend
             source venv/bin/activate
             pip install -r requirements.txt
-            sudo systemctl restart coinmatrix.service
+            sudo systemctl restart coinmatrix-backend
+            
 
             cd ../frontend
             npm install
             npm run build
             sudo cp -r dist/* /usr/share/nginx/html/
+            sudo systemctl restart coinmatrix-frontend
