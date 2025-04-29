@@ -16,19 +16,21 @@ jobs:
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
+          username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /home/ec2-user/CoinMatrix
+            cd /home/ubuntu/CoinMatrix
             git pull origin main
+
+            # Backend setup
             cd backend
             source venv/bin/activate
             pip install -r requirements.txt
             sudo systemctl restart coinmatrix-backend
-            
 
+            # Frontend setup
             cd ../frontend
             npm install
             npm run build
-            sudo cp -r dist/* /usr/share/nginx/html/
+            sudo chown -R ubuntu:ubuntu dist
             sudo systemctl restart coinmatrix-frontend
