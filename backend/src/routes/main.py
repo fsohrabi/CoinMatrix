@@ -13,7 +13,7 @@ COIN_API_KEY = os.getenv('COIN_API_KEY')
 COIN_API_BASE_URL = "https://pro-api.coinmarketcap.com"
 
 
-@main_blueprint.route('', methods=['GET'])
+@main_blueprint.route('/', methods=['GET'])
 def home():
     """
     Fetch and return cryptocurrency data similar to CoinMarketCap's homepage with caching and pagination.
