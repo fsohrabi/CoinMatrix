@@ -30,7 +30,7 @@ def create_app():
     """
     app = Flask(__name__)
     frontend_url = os.environ.get("FRONTEND_URL")
-    CORS(app, supports_credentials=True, origins=frontend_url)
+    CORS(app, supports_credentials=True, origins=[frontend_url])
 
     # Load environment-specific configuration
     env = os.getenv("FLASK_ENV")
