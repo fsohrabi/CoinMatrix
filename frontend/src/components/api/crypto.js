@@ -44,7 +44,7 @@ export const searchCryptosAPI = async (query) => {
 
 export const fetchCryptosAPI = async (page = 1, limit = 20) => {
     try {
-        const response = await fetch(`${apiUrl}?page=${page}&limit=${limit}`);
+        const response = await fetch(`${apiUrl}/?page=${page}&limit=${limit}`);
         if (!response.ok) {
             throw new Error('Failed to fetch cryptocurrency data');
         }
